@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+@theme {
+  /* Brand Colors */
+  --color-brand-primary: #0ea5e9;
+  --color-brand-primary-hover: #0284c7;
+  --color-brand-secondary: #64748b;
+
+  /* Status Colors */
+  --color-status-ontime: #22c55e;
+  --color-status-late: #f59e0b;
+  --color-status-absent: #ef4444;
+  --color-status-error: #ef4444;
+
+  /* Text Colors */
+  --color-text-header: #1e293b;
+  --color-text-body: #475569;
+  --color-text-muted: #94a3b8;
+
+  /* Border Radius */
+  --radius-btn: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-input: 0.5rem;
+}
+
+/* Base Styles */
+body {
+  @apply text-text-body bg-gray-50;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply text-text-header font-bold;
+}
