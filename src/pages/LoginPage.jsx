@@ -84,6 +84,15 @@ export function LoginPage() {
             required
           />
 
+          <div className="flex justify-end">
+            <a
+              href="/forgot-password"
+              className="text-sm font-medium text-brand-primary hover:text-brand-primary-hover hover:underline transition-colors"
+            >
+              ลืมรหัสผ่าน?
+            </a>
+          </div>
+
           <Button
             type="submit"
             className="w-full justify-center"
