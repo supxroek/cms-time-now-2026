@@ -48,7 +48,7 @@ export function DashboardPage() {
         </div>
         <div className="flex items-center gap-4">
           <UserProfile
-            name={user?.name || "User"}
+            name={user?.email || "Username"}
             role={user?.role || "Employee"}
             avatarUrl={user?.avatar}
           />
