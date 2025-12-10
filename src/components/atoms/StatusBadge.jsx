@@ -1,5 +1,3 @@
-import PropTypes from "prop-types";
-
 export function StatusBadge({ status }) {
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
@@ -29,11 +27,3 @@ export function StatusBadge({ status }) {
     </span>
   );
 }
-
-StatusBadge.propTypes = {
-  status: PropTypes.string,
-};
-
-StatusBadge.defaultProps = {
-  status: "Unknown",
-};

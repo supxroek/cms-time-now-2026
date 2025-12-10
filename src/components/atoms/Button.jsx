@@ -1,5 +1,3 @@
-import PropTypes from "prop-types";
-
 export function Button({
   children,
   onClick,
@@ -31,18 +29,3 @@ export function Button({
     </button>
   );
 }
-
-Button.propTypes = {
-  children: PropTypes.node,
-  onClick: PropTypes.func,
-  type: PropTypes.oneOf(["button", "submit", "reset"]),
-  variant: PropTypes.oneOf([
-    "primary",
-    "secondary",
-    "outline",
-    "danger",
-    "ghost",
-  ]),
-  className: PropTypes.string,
-  disabled: PropTypes.bool,
-};

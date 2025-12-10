@@ -1,6 +1,3 @@
-
-import PropTypes from "prop-types";
- 
 export function Avatar({ src, alt, size = "md", className = "" }) {
   const sizes = {
     sm: "w-8 h-8 text-xs",
@@ -36,17 +33,3 @@ export function Avatar({ src, alt, size = "md", className = "" }) {
     </div>
   );
 }
-
-Avatar.propTypes = {
-  src: PropTypes.string,
-  alt: PropTypes.string,
-  size: PropTypes.oneOf(["sm", "md", "lg", "xl"]),
-  className: PropTypes.string,
-};
-
-Avatar.defaultProps = {
-  src: null,
-  alt: "",
-  size: "md",
-  className: "",
-};

@@ -1,5 +1,3 @@
-import PropTypes from "prop-types";
-
 export function Input({
   type = "text",
   placeholder,
@@ -30,27 +28,3 @@ export function Input({
     />
   );
 }
-
-Input.propTypes = {
-  type: PropTypes.string,
-  placeholder: PropTypes.string,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  onChange: PropTypes.func,
-  name: PropTypes.string,
-  id: PropTypes.string,
-  className: PropTypes.string,
-  error: PropTypes.bool,
-  disabled: PropTypes.bool,
-};
-
-Input.defaultProps = {
-  type: "text",
-  placeholder: "",
-  value: "",
-  onChange: undefined,
-  name: undefined,
-  id: undefined,
-  className: "",
-  error: false,
-  disabled: false,
-};
