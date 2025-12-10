@@ -1,5 +1,5 @@
 export const API_BASE_URL = "http://localhost:3000/api";
-export const API_TIMEOUT = 30000; // 30 วินาที
+export const API_TIMEOUT = 5000; // 5 วินาที
 
 export const API_ENDPOINTS = {
   AUTH: {

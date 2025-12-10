@@ -24,13 +24,20 @@ export function DashboardPage() {
   }, []);
 
   const handleCheckIn = () => {
-    // In a real app, you might get location here
+    // ให้บันทึกเวลาปัจจุบันเป็นเวลาเข้างาน
     dispatch(checkIn({ timestamp: new Date().toISOString() }));
   };
 
   const handleCheckOut = () => {
     dispatch(checkOut({ timestamp: new Date().toISOString() }));
   };
+
+  // สร้างป้ายสถานะวันนี้
+  const todayStatusLabel = (() => {
+    if (status === "working") return "Working";
+    if (todayRecord) return "Present";
+    return "Absent";
+  })();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,22 +105,7 @@ export function DashboardPage() {
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-sm text-text-muted">เวลาออกงาน</span>
-              <span className="font-medium">
-                {todayRecord?.checkOut ? formatTime(todayRecord.checkOut) : "-"}
-              </span>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-sm text-text-muted mb-1">สถานะ</span>
-              <StatusBadge
-                status={
-                  status === "working"
-                    ? "Working"
-                    : todayRecord
-                    ? "Present"
-                    : "Absent"
-                }
-              />
+              <StatusBadge status={todayStatusLabel} />
             </div>
           </div>
         </div>

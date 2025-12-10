@@ -16,20 +16,43 @@ export const loginUser = createAsyncThunk(
         credentials,
         { timeout: API_TIMEOUT }
       );
-      // เก็บโทเค็นใน localStorage
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
+
+      const data = response.data;
+
+      // ตรวจสอบโครงสร้างข้อมูลจาก Backend: { success: true, data: { token: "...", ...user } }
+      if (data.success && data.data?.token) {
+        const userData = data.data;
+        const token = userData.token;
+
+        // เก็บโทเค็นและข้อมูลผู้ใช้ใน localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(userData));
+
+        return userData; // ส่งกลับเฉพาะส่วน data ที่มี user info และ token
+      } else {
+        return rejectWithValue("Invalid response format from server");
       }
-      return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || "Login failed");
+      return rejectWithValue(error.response?.data?.error || "Login failed");
     }
   }
 );
 
+// Helper to safely parse JSON
+const getUserFromStorage = () => {
+  try {
+    const userStr = localStorage.getItem("user");
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (error) {
+    // บันทึกข้อผิดพลาดเพื่อการดีบัก ในขณะที่ยังคงส่งกลับค่า null เมื่อเกิดความล้มเหลว
+    console.error("Failed to parse user from localStorage:", error);
+    return null;
+  }
+};
+
 // สถานะเริ่มต้นของ state
 const initialState = {
-  user: null,
+  user: getUserFromStorage(),
   token: localStorage.getItem("token") || null,
   isAuthenticated: !!localStorage.getItem("token"),
   isLoading: false,
@@ -48,6 +71,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.error = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
     },
   },
 
@@ -64,7 +88,7 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false; // หยุดโหลด
         state.isAuthenticated = true; // ตั้งค่าสถานะว่าเข้าสู่ระบบแล้ว
-        state.user = action.payload.user; // ข้อมูลผู้ใช้
+        state.user = action.payload; // ข้อมูลผู้ใช้ (รวม token)
         state.token = action.payload.token; // โทเค็นการตรวจสอบสิทธิ์
       })
       // เมื่อเข้าสู่ระบบล้มเหลว (Rejected)
