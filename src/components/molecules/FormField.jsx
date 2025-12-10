@@ -11,13 +11,13 @@ export function FormField({
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-text-header">
-          {label} {required && <span className="text-status-error">*</span>}
+        <label htmlFor={id} className="text-sm font-medium text-text-main">
+          {label} {required && <span className="text-danger">*</span>}
         </label>
       )}
       <Input id={id} error={!!error} {...inputProps} />
       {error && (
-        <span className="text-xs text-status-error animate-pulse">{error}</span>
+        <span className="text-xs text-danger animate-pulse">{error}</span>
       )}
     </div>
   );

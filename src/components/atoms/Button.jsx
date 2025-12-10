@@ -7,15 +7,17 @@ export function Button({
   disabled = false,
 }) {
   const baseStyles =
-    "px-4 py-2 rounded-btn font-medium transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
+    "px-4 py-2 rounded-md font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-95";
 
   const variants = {
-    primary: "bg-brand-primary text-white hover:bg-brand-primary-hover",
-    secondary: "bg-gray-200 text-text-body hover:bg-gray-300",
-    outline:
-      "border border-brand-primary text-brand-primary hover:bg-brand-primary/10",
-    danger: "bg-status-error text-white hover:opacity-90",
-    ghost: "bg-transparent text-text-body hover:bg-gray-100",
+    primary:
+      "bg-primary text-white hover:bg-primary-hover shadow-sm hover:shadow-md",
+    secondary:
+      "bg-white border border-gray-200 text-text-sub hover:bg-gray-50 hover:text-text-main shadow-sm",
+    outline: "border border-primary text-primary hover:bg-primary/5",
+    danger: "bg-danger text-white hover:opacity-90 shadow-sm",
+    ghost:
+      "bg-transparent text-text-sub hover:bg-gray-100 hover:text-text-main",
   };
 
   return (

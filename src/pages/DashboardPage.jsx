@@ -44,7 +44,7 @@ export function DashboardPage() {
       {/* Navbar */}
       <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-brand-primary">Time Now</h1>
+          <h1 className="text-xl font-bold text-primary">Time Now</h1>
         </div>
         <div className="flex items-center gap-4">
           <UserProfile
@@ -61,9 +61,9 @@ export function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto p-6 space-y-6">
         {/* Header Card */}
-        <div className="bg-white rounded-card p-8 shadow-sm text-center space-y-4">
+        <div className="bg-white rounded-lg p-8 shadow-sm text-center space-y-4">
           <div className="space-y-1">
-            <h2 className="text-4xl font-bold text-text-header">
+            <h2 className="text-4xl font-bold text-text-main">
               {formatTime(currentTime)}
             </h2>
             <p className="text-text-muted">{formatDate(currentTime)}</p>
@@ -91,11 +91,11 @@ export function DashboardPage() {
             )}
           </div>
 
-          {error && <p className="text-status-error text-sm mt-2">{error}</p>}
+          {error && <p className="text-danger text-sm mt-2">{error}</p>}
         </div>
 
         {/* Today's Status */}
-        <div className="bg-white rounded-card p-6 shadow-sm">
+        <div className="bg-white rounded-lg p-6 shadow-sm">
           <h3 className="text-lg font-semibold mb-4">สถานะวันนี้</h3>
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div className="flex flex-col">

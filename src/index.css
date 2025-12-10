@@ -1,33 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Pridi:wght@200;300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-@theme {
-  /* Brand Colors */
-  --color-brand-primary: #0ea5e9;
-  --color-brand-primary-hover: #0284c7;
-  --color-brand-secondary: #64748b;
 
-  /* Status Colors */
-  --color-status-ontime: #22c55e;
-  --color-status-late: #f59e0b;
-  --color-status-absent: #ef4444;
-  --color-status-error: #ef4444;
+@theme {
+  /* Font Families */
+  --font-sans: "Pridi", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-display: "Pridi", var(--font-sans);
+
+  /* Palette - Minimal & Elegant (Slate & Emerald) */
+  --color-primary: #0f172a;
+  /* Slate 900 */
+  --color-primary-hover: #1e293b;
+  /* Slate 800 */
+  --color-secondary: #64748b;
+  /* Slate 500 */
+
+  --color-surface: #ffffff;
+  --color-background: #f8fafc;
+  /* Slate 50 */
+
+  /* Semantic Colors */
+  --color-success: #10b981;
+  /* Emerald 500 */
+  --color-warning: #f59e0b;
+  /* Amber 500 */
+  --color-danger: #ef4444;
+  /* Red 500 */
+  --color-info: #3b82f6;
+  /* Blue 500 */
 
   /* Text Colors */
-  --color-text-header: #1e293b;
-  --color-text-body: #475569;
+  --color-text-main: #0f172a;
+  /* Slate 900 */
+  --color-text-sub: #475569;
+  /* Slate 600 */
   --color-text-muted: #94a3b8;
+  /* Slate 400 */
+  --color-text-inv: #ffffff;
 
   /* Border Radius */
-  --radius-btn: 0.5rem;
-  --radius-card: 0.75rem;
-  --radius-input: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-float: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Font Tokens / Utility classes (use these in components) */
+.text-header {
+  font-family: var(--font-display);
+  font-weight: 600;
+  -webkit-font-smoothing: antialiased;
+}
+
+.text-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Base Styles */
 body {
-  @apply text-text-body bg-gray-50;
+  @apply bg-background text-text-sub antialiased;
+  font-family: var(--font-sans);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  @apply text-text-header font-bold;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply text-text-main font-semibold tracking-tight;
+  /* prefer using token class on headings where needed */
+}
+
+/* Utility Classes */
+.glass-panel {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-card;
 }

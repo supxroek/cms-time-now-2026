@@ -43,16 +43,15 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white rounded-card shadow-lg p-8">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+        <img className="mx-auto mb-6 w-24 h-24" src="/src/assets/clock.png" alt="Time Now Logo" />
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-brand-primary mb-2">
-            Time Now
-          </h1>
+          <h1 className="text-5xl font-bold text-primary mb-2">Time Now</h1>
           <p className="text-text-muted">ลงชื่อเข้าใช้เพื่อจัดการเวลาเข้างาน</p>
         </div>
 
         {authError && (
-          <div className="mb-6 p-3 bg-status-error/10 border border-status-error/20 rounded-md text-status-error text-sm text-center">
+          <div className="mb-6 p-3 bg-danger/10 border border-danger/20 rounded-md text-danger text-sm text-center">
             {typeof authError === "string"
               ? authError
               : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"}
@@ -87,7 +86,7 @@ export function LoginPage() {
           <div className="flex justify-end">
             <a
               href="/forgot-password"
-              className="text-sm font-medium text-brand-primary hover:text-brand-primary-hover hover:underline transition-colors"
+              className="text-sm font-medium text-primary hover:text-primary-hover hover:underline transition-colors"
             >
               ลืมรหัสผ่าน?
             </a>
