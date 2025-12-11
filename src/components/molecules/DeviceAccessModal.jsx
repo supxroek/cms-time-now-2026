@@ -17,7 +17,7 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
   const [filterType, setFilterType] = useState("all"); // all, selected, unselected
 
   useEffect(() => {
-    if (device && device.employeeIds) {
+    if (device?.employeeIds) {
       setSelectedEmployeeIds(device.employeeIds);
     } else {
       setSelectedEmployeeIds([]);
@@ -60,10 +60,8 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
   };
 
   const handleDeselectAllFiltered = () => {
-    const idsToRemove = filteredEmployees.map((emp) => emp.id);
-    setSelectedEmployeeIds((prev) =>
-      prev.filter((id) => !idsToRemove.includes(id))
-    );
+    const idsToRemove = new Set(filteredEmployees.map((emp) => emp.id));
+    setSelectedEmployeeIds((prev) => prev.filter((id) => !idsToRemove.has(id)));
   };
 
   const handleSave = async () => {
@@ -197,11 +195,13 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
               filteredEmployees.map((emp) => {
                 const isSelected = selectedEmployeeIds.includes(emp.id);
                 return (
-                  <div
+                  <button
                     key={emp.id}
+                    type="button"
                     onClick={() => handleToggleEmployee(emp.id)}
+                    aria-pressed={isSelected}
                     className={`
-                      group flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200
+                      group flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 text-left
                       ${
                         isSelected
                           ? "bg-primary/5 border-primary/30 shadow-sm"
@@ -256,7 +256,7 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
                         className="text-xs"
                       />
                     </div>
-                  </div>
+                  </button>
                 );
               })
             ) : (

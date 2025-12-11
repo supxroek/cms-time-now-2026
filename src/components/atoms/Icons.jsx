@@ -293,3 +293,4 @@ DevicesIcon.propTypes = iconPropTypes;
 SyncIcon.propTypes = iconPropTypes;
 EditIcon.propTypes = iconPropTypes;
 DeleteIcon.propTypes = iconPropTypes;
+PlusIcon.propTypes = iconPropTypes;
