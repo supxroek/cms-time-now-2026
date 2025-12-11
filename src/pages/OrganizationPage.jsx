@@ -1099,6 +1099,11 @@ export function OrganizationPage() {
               value={deviceModal.data?.locationURL || ""}
               onChange={handleDeviceInputChange}
               placeholder="http://..."
+              type="url"
+              inputMode="url"
+              pattern="https://.*"
+              title="โปรดใช้ URL ที่เริ่มต้นด้วย https://"
+              autoComplete="off"
               error={validationErrors?.locationURL}
             />
           </div>
