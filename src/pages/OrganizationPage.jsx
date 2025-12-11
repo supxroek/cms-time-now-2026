@@ -1,4 +1,6 @@
+// import React และ hooks ที่จำเป็น
 import { useEffect, useState } from "react";
+// import Redux hooks และ actions ที่จำเป็น
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCompanyInfo,
@@ -13,9 +15,13 @@ import {
   deleteDevice,
   syncDevice,
 } from "../store/slices/companySlice";
+// import components ที่จำเป็นในส่วนของ UI จาก Atom และ Molecules
 import { Button } from "../components/atoms/Button";
 import { Input } from "../components/atoms/Input";
 import { Label } from "../components/atoms/Label";
+import { Switch } from "../components/atoms/Switch";
+import { StatusBadge } from "../components/atoms/StatusBadge";
+import { Tooltip } from "../components/atoms/Tooltip";
 import {
   OrganizationIcon,
   DevicesIcon,
@@ -24,11 +30,10 @@ import {
   DeleteIcon,
 } from "../components/atoms/Icons";
 import { Modal, ConfirmModal } from "../components/molecules/Modal";
-import { Switch } from "../components/atoms/Switch";
-import { StatusBadge } from "../components/atoms/StatusBadge";
-import { Tooltip } from "../components/atoms/Tooltip";
+
 import PropTypes from "prop-types";
 
+// จัดการปุ่มแท็บ
 const TabButton = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
@@ -41,25 +46,29 @@ const TabButton = ({ active, onClick, children }) => (
     {children}
   </button>
 );
-
+// กำหนด prop types สำหรับ TabButton
 TabButton.propTypes = {
   active: PropTypes.bool.isRequired,
   onClick: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
 };
 
+// จัดการแถวแสดงข้อมูล
 const InfoRow = ({ label, value }) => (
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3 border-b border-gray-100 last:border-0">
     <dt className="text-sm font-medium text-text-sub">{label}</dt>
     <dd className="text-sm text-text-main sm:col-span-2">{value || "-"}</dd>
   </div>
 );
-
+// กำหนด prop types สำหรับ InfoRow
 InfoRow.propTypes = {
   label: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
+// ========================================================================
+// ========================= ส่วนจัดการ logic ของหน้าจัดการองค์กร ================
+// ========================================================================
 function useOrganizationLogic() {
   const dispatch = useDispatch();
   const { companyInfo, departments, devices, isLoading } = useSelector(
@@ -90,12 +99,15 @@ function useOrganizationLogic() {
     name: "",
   });
 
+  // ดึงข้อมูลบริษัท แผนก และอุปกรณ์เมื่อโหลดหน้า
   useEffect(() => {
     dispatch(fetchCompanyInfo());
     dispatch(fetchDepartments());
     dispatch(fetchDevices());
   }, [dispatch]);
 
+  // ========================= ส่วนจัดการฟอร์มข้อมูลบริษัท =========================
+  // จัดการการเปลี่ยนแปลงข้อมูลฟอร์ม
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -103,7 +115,7 @@ function useOrganizationLogic() {
       setValidationErrors((prev) => ({ ...prev, [name]: null }));
     }
   };
-
+  // ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลบริษัท
   const validateCompanyInfo = (data) => {
     const errors = {};
     if (!data.name) errors.name = "กรุณาระบุชื่อบริษัท";
@@ -111,7 +123,7 @@ function useOrganizationLogic() {
     if (!data.tax_id) errors.tax_id = "กรุณาระบุเลขผู้เสียภาษี";
     return errors;
   };
-
+  // จัดการการส่งข้อมูลฟอร์ม
   const handleSubmit = (e) => {
     e.preventDefault();
     const errors = validateCompanyInfo(formData);
@@ -119,7 +131,7 @@ function useOrganizationLogic() {
       setValidationErrors(errors);
       return;
     }
-
+    // ส่งข้อมูลอัปเดตบริษัท
     dispatch(updateCompanyInfo(formData))
       .unwrap()
       .then(() => {
@@ -128,35 +140,37 @@ function useOrganizationLogic() {
       })
       .catch((error) => console.error("Failed to update company info:", error));
   };
-
+  // เริ่มแก้ไขข้อมูล
   const handleEditClick = () => {
     setFormData(companyInfo || {});
     setIsEditing(true);
     setValidationErrors({});
   };
-
+  // ยกเลิกการแก้ไข
   const handleCancel = () => {
     setIsEditing(false);
     setFormData({});
     setValidationErrors({});
   };
 
+  // ========================= ส่วนจัดการแผนก ==============================
+  // เปิดโมดอลแผนก
   const openDeptModal = (mode, data = null) => {
     setDeptModal({ isOpen: true, mode, data: data || {} });
     setValidationErrors({});
   };
-
+  // ปิดโมดอลแผนก
   const closeDeptModal = () => {
     setDeptModal({ isOpen: false, mode: "add", data: null });
     setValidationErrors({});
   };
-
+  // ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลแผนก
   const validateDepartment = (data) => {
     const errors = {};
     if (!data.departmentName) errors.departmentName = "กรุณาระบุชื่อแผนก";
     return errors;
   };
-
+  // จัดการการส่งข้อมูลฟอร์มแผนก
   const handleDeptSubmit = (e) => {
     e.preventDefault();
     const errors = validateDepartment(deptModal.data || {});
@@ -164,7 +178,6 @@ function useOrganizationLogic() {
       setValidationErrors(errors);
       return;
     }
-
     const action = deptModal.mode === "add" ? addDepartment : updateDepartment;
     dispatch(action(deptModal.data))
       .unwrap()
@@ -175,7 +188,7 @@ function useOrganizationLogic() {
       })
       .catch((err) => console.error(err));
   };
-
+  // จัดการการเปลี่ยนแปลงข้อมูลฟอร์มแผนก
   const handleDeptInputChange = (e) => {
     const { name, value } = e.target;
     setDeptModal((prev) => ({
@@ -187,16 +200,18 @@ function useOrganizationLogic() {
     }
   };
 
+  // ========================= ส่วนจัดการอุปกรณ์ ==============================
+  // เปิดโมดอลอุปกรณ์
   const openDeviceModal = (mode, data = null) => {
     setDeviceModal({ isOpen: true, mode, data: data || {} });
     setValidationErrors({});
   };
-
+  // ปิดโมดอลอุปกรณ์
   const closeDeviceModal = () => {
     setDeviceModal({ isOpen: false, mode: "add", data: null });
     setValidationErrors({});
   };
-
+  // ฟังก์ชันตรวจสอบความถูกต้องของข้อมูลอุปกรณ์
   const validateDevice = (data) => {
     const errors = {};
     if (!data.name) errors.name = "กรุณาระบุชื่ออุปกรณ์";
@@ -205,7 +220,7 @@ function useOrganizationLogic() {
     if (!data.passcode) errors.passcode = "กรุณาระบุ Passcode";
     return errors;
   };
-
+  // จัดการการส่งข้อมูลฟอร์มอุปกรณ์
   const handleDeviceSubmit = (e) => {
     e.preventDefault();
     const errors = validateDevice(deviceModal.data || {});
@@ -213,14 +228,18 @@ function useOrganizationLogic() {
       setValidationErrors(errors);
       return;
     }
-
+    // เลือก action เพิ่มหรือแก้ไข
     const action = deviceModal.mode === "add" ? addDevice : updateDevice;
     dispatch(action(deviceModal.data))
       .unwrap()
-      .then(() => closeDeviceModal())
+      .then(() => {
+        closeDeviceModal();
+        // ดึงข้อมูลใหม่ทันทีเพื่อให้แนใจว่าข้อมูลตรงกับฐานข้อมูล
+        dispatch(fetchDevices());
+      })
       .catch((err) => console.error(err));
   };
-
+  // จัดการการเปลี่ยนแปลงข้อมูลฟอร์มอุปกรณ์
   const handleDeviceInputChange = (e) => {
     const { name, value } = e.target;
     setDeviceModal((prev) => ({
@@ -232,6 +251,8 @@ function useOrganizationLogic() {
     }
   };
 
+  // ========================= ส่วนจัดการการตั้งค่าแผนก (เปิด/ปิด) ==============================
+  // จัดการการสลับสถานะการใช้ระบบแผนก
   const handleCompanyDepartmentToggle = (checked) => {
     setIsTogglingDepartment(true);
     // ส่งเฉพาะค่าที่เปลี่ยนแปลง (hasDepartment) เพื่อป้องกันปัญหา Validation กับ field อื่น
@@ -244,21 +265,22 @@ function useOrganizationLogic() {
       });
   };
 
-  // helpers to avoid deeply nested inline functions
+  // ========================= ส่วนจัดการการซิงค์อุปกรณ์ ==============================
+  // จัดการสถานะการซิงค์อุปกรณ์
   const addSyncingDevice = (id) =>
     setSyncingDevices((prev) => {
       const next = new Set(prev);
       next.add(id);
       return next;
     });
-
+  // ลบสถานะการซิงค์อุปกรณ์
   const removeSyncingDevice = (id) =>
     setSyncingDevices((prev) => {
       const next = new Set(prev);
       next.delete(id);
       return next;
     });
-
+  // จัดการการซิงค์อุปกรณ์
   const handleSyncDevice = (deviceId) => {
     addSyncingDevice(deviceId);
     dispatch(syncDevice(deviceId))
@@ -273,6 +295,8 @@ function useOrganizationLogic() {
       });
   };
 
+  // ========================= ส่วนจัดการการลบแผนก/อุปกรณ์ ==============================
+  // เปิดโมดอลยืนยันการลบ
   const openDeleteModal = (type, item) => {
     setDeleteModal({
       isOpen: true,
@@ -281,10 +305,10 @@ function useOrganizationLogic() {
       name: type === "department" ? item.departmentName : item.name,
     });
   };
-
+  // ปิดโมดอลยืนยันการลบ
   const closeDeleteModal = () =>
     setDeleteModal({ isOpen: false, type: null, id: null, name: "" });
-
+  // จัดการการยืนยันลบแผนก/อุปกรณ์
   const handleConfirmDelete = () => {
     const action =
       deleteModal.type === "department" ? deleteDepartment : deleteDevice;
@@ -331,15 +355,20 @@ function useOrganizationLogic() {
   };
 }
 
+// ========================================================================
+// ========================= ส่วนแสดงข้อมูลบริษัท ==============================
+// ========================================================================
+
+// ฟังก์ชันแสดงข้อมูลบริษัท
 function InfoSection({
-  companyInfo,
-  isEditing,
-  formData,
-  handleInputChange,
-  handleSubmit,
-  handleCancel,
-  isLoading,
-  validationErrors,
+  companyInfo, // ข้อมูลบริษัท
+  isEditing, // สถานะการแก้ไข
+  formData, // ข้อมูลฟอร์ม
+  handleInputChange, // ฟังก์ชันจัดการการเปลี่ยนแปลงข้อมูลฟอร์ม
+  handleSubmit, // ฟังก์ชันจัดการการส่งข้อมูลฟอร์ม
+  handleCancel, // ฟังก์ชันจัดการการยกเลิกการแก้ไข
+  isLoading, // สถานะการโหลด
+  validationErrors, // ข้อผิดพลาดการตรวจสอบความถูกต้องของข้อมูล
 }) {
   if (isEditing) {
     return (
@@ -574,7 +603,7 @@ function InfoSection({
     </div>
   );
 }
-
+// กำหนด prop types สำหรับ InfoSection
 InfoSection.propTypes = {
   companyInfo: PropTypes.shape({
     name: PropTypes.string,
@@ -603,13 +632,18 @@ InfoSection.propTypes = {
   validationErrors: PropTypes.objectOf(PropTypes.string),
 };
 
+// ========================================================================
+// ========================= ส่วนแสดงแผนกต่างๆ ===============================
+// ========================================================================
+
+// ฟังก์ชันแสดงแผนกต่างๆ
 function DepartmentsSection({
-  companyInfo,
-  departments,
-  openDeptModal,
-  openDeleteModal,
-  handleCompanyDepartmentToggle,
-  isTogglingDepartment,
+  companyInfo, // ข้อมูลบริษัท
+  departments, // รายการแผนก
+  openDeptModal, // ฟังก์ชันเปิดโมดอลแผนก
+  openDeleteModal, // ฟังก์ชันเปิดโมดอลยืนยันการลบ
+  handleCompanyDepartmentToggle, // ฟังก์ชันจัดการการสลับสถานะการใช้ระบบแผนก
+  isTogglingDepartment, // สถานะการสลับสถานะการใช้ระบบแผนก
 }) {
   return (
     <div>
@@ -706,7 +740,7 @@ function DepartmentsSection({
     </div>
   );
 }
-
+// กำหนด prop types สำหรับ DepartmentsSection
 DepartmentsSection.propTypes = {
   companyInfo: PropTypes.shape({
     hasDepartment: PropTypes.oneOf([0, 1]),
@@ -726,13 +760,18 @@ DepartmentsSection.propTypes = {
   isTogglingDepartment: PropTypes.bool.isRequired,
 };
 
+// ========================================================================
+// ========================= ส่วนแสดงรายการอุปกรณ์ ============================
+// ========================================================================
+
+//  ฟังก์ชันแสดงรายการอุปกรณ์
 function DevicesSection({
-  devices,
-  hasDeviceStatus,
-  openDeviceModal,
-  openDeleteModal,
-  handleSyncDevice,
-  syncingDevices,
+  devices, // รายการอุปกรณ์
+  hasDeviceStatus, // ตัวบ่งชี้ว่าจะแสดงสถานะอุปกรณ์หรือไม่
+  openDeviceModal, // ฟังก์ชันเปิดโมดอลอุปกรณ์
+  openDeleteModal, // ฟังก์ชันเปิดโมดอลยืนยันการลบ
+  handleSyncDevice, // ฟังก์ชันจัดการการซิงค์อุปกรณ์
+  syncingDevices, // ชุดของอุปกรณ์ที่กำลังซิงค์
 }) {
   const devicesColCount = hasDeviceStatus ? 6 : 5;
 
@@ -843,7 +882,7 @@ function DevicesSection({
     </div>
   );
 }
-
+// กำหนด prop types สำหรับ DevicesSection
 DevicesSection.propTypes = {
   devices: PropTypes.arrayOf(PropTypes.object),
   hasDeviceStatus: PropTypes.bool,
@@ -853,8 +892,13 @@ DevicesSection.propTypes = {
   syncingDevices: PropTypes.instanceOf(Set),
 };
 
+// ========================================================================
+// ========================= ส่วนหลักของหน้าจัดการองค์กร =========================
+// ========================================================================
+
+// ฟังก์ชันหลักของหน้าจัดการองค์กร
 export function OrganizationPage() {
-  const logic = useOrganizationLogic();
+  const logic = useOrganizationLogic(); // ใช้ hook logic สำหรับจัดการสถานะและฟังก์ชันต่างๆ
   const {
     companyInfo,
     departments,
@@ -887,16 +931,17 @@ export function OrganizationPage() {
     handleCompanyDepartmentToggle,
     handleSyncDevice,
     handleConfirmDelete,
-  } = logic;
+  } = logic; // ดึงสถานะและฟังก์ชันต่างๆ จาก hook logic
 
   if (isLoading && !companyInfo) {
     return <div className="p-8 text-center text-text-sub">Loading...</div>;
   }
 
+  // ตรวจสอบว่ามีการระบุสถานะของอุปกรณ์หรือไม่
   const hasDeviceStatus =
     Array.isArray(devices) &&
     devices.some((d) => d.status != null && d.status !== "");
-
+  // ฟังก์ชันปรับ URL ให้เป็นรูปแบบ HTTPS
   const normalizeToHttps = (url) => {
     if (!url) return url;
     const trimmed = String(url).trim();
@@ -912,7 +957,7 @@ export function OrganizationPage() {
     }
     return "https://" + trimmed;
   };
-
+  // ปรับข้อมูลอุปกรณ์ให้ URL เป็น HTTPS
   const safeDevices = Array.isArray(devices)
     ? devices.map((d) => ({
         ...d,
