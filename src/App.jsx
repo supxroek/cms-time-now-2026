@@ -8,6 +8,7 @@ import {
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { OrganizationPage } from "./pages/OrganizationPage";
+import { EmployeePage } from "./pages/EmployeePage";
 import { MainLayout } from "./layouts/MainLayout";
 import { useAuth } from "./hooks/useAuth";
 
@@ -60,10 +61,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/organization" element={<OrganizationPage />} />
-          <Route
-            path="/employees"
-            element={<PlaceholderPage title="Employee Management" />}
-          />
+          <Route path="/employees" element={<EmployeePage />} />
           <Route
             path="/shifts"
             element={<PlaceholderPage title="Shift Management" />}

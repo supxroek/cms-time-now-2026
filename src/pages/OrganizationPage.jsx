@@ -15,6 +15,7 @@ import {
   deleteDevice,
   syncDevice,
 } from "../store/slices/companySlice";
+import { fetchEmployees } from "../store/slices/employeeSlice";
 // import components ที่จำเป็นในส่วนของ UI จาก Atom และ Molecules
 import { Button } from "../components/atoms/Button";
 import { Input } from "../components/atoms/Input";
@@ -28,8 +29,10 @@ import {
   SyncIcon,
   EditIcon,
   DeleteIcon,
+  UsersIcon,
 } from "../components/atoms/Icons";
 import { Modal, ConfirmModal } from "../components/molecules/Modal";
+import { DeviceAccessModal } from "../components/molecules/DeviceAccessModal";
 
 import PropTypes from "prop-types";
 
@@ -98,12 +101,17 @@ function useOrganizationLogic() {
     id: null,
     name: "",
   });
+  const [accessModal, setAccessModal] = useState({
+    isOpen: false,
+    device: null,
+  });
 
   // ดึงข้อมูลบริษัท แผนก และอุปกรณ์เมื่อโหลดหน้า
   useEffect(() => {
     dispatch(fetchCompanyInfo());
     dispatch(fetchDepartments());
     dispatch(fetchDevices());
+    dispatch(fetchEmployees());
   }, [dispatch]);
 
   // ========================= ส่วนจัดการฟอร์มข้อมูลบริษัท =========================
@@ -318,6 +326,15 @@ function useOrganizationLogic() {
       .catch((err) => console.error(err));
   };
 
+  // ========================= ส่วนจัดการสิทธิ์การเข้าถึงอุปกรณ์ ==============================
+  const openAccessModal = (device) => {
+    setAccessModal({ isOpen: true, device });
+  };
+
+  const closeAccessModal = () => {
+    setAccessModal({ isOpen: false, device: null });
+  };
+
   return {
     companyInfo,
     departments,
@@ -332,6 +349,7 @@ function useOrganizationLogic() {
     deptModal,
     deviceModal,
     deleteModal,
+    accessModal,
     validationErrors,
     syncingDevices,
     isTogglingDepartment,
@@ -352,6 +370,8 @@ function useOrganizationLogic() {
     openDeleteModal,
     closeDeleteModal,
     handleConfirmDelete,
+    openAccessModal,
+    closeAccessModal,
   };
 }
 
@@ -772,8 +792,9 @@ function DevicesSection({
   openDeleteModal, // ฟังก์ชันเปิดโมดอลยืนยันการลบ
   handleSyncDevice, // ฟังก์ชันจัดการการซิงค์อุปกรณ์
   syncingDevices, // ชุดของอุปกรณ์ที่กำลังซิงค์
+  openAccessModal, // ฟังก์ชันเปิดโมดอลจัดการสิทธิ์
 }) {
-  const devicesColCount = hasDeviceStatus ? 6 : 5;
+  const devicesColCount = hasDeviceStatus ? 7 : 6;
 
   return (
     <div>
@@ -796,6 +817,7 @@ function DevicesSection({
               <th className="px-4 py-3">Location URL</th>
               <th className="px-4 py-3">Passcode</th>
               {hasDeviceStatus && <th className="px-4 py-3">สถานะ</th>}
+              <th className="px-4 py-3 text-center">สิทธิ์การเข้าถึง</th>
               <th className="px-4 py-3 rounded-tr-lg text-right">จัดการ</th>
             </tr>
           </thead>
@@ -831,6 +853,17 @@ function DevicesSection({
                       )}
                     </td>
                   )}
+                  <td className="px-4 py-3 text-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openAccessModal(device)}
+                      className="text-xs px-3 py-1 h-auto"
+                    >
+                      <UsersIcon className="w-3 h-3 mr-1.5" />
+                      จัดการสิทธิ์ ({device.employeeIds?.length || 0})
+                    </Button>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <Tooltip text="Sync ข้อมูล">
@@ -890,6 +923,7 @@ DevicesSection.propTypes = {
   openDeleteModal: PropTypes.func.isRequired,
   handleSyncDevice: PropTypes.func.isRequired,
   syncingDevices: PropTypes.instanceOf(Set),
+  openAccessModal: PropTypes.func.isRequired,
 };
 
 // ========================================================================
@@ -915,6 +949,7 @@ export function OrganizationPage() {
     deptModal,
     deviceModal,
     deleteModal,
+    accessModal,
     validationErrors,
     syncingDevices,
     isTogglingDepartment,
@@ -931,6 +966,8 @@ export function OrganizationPage() {
     handleCompanyDepartmentToggle,
     handleSyncDevice,
     handleConfirmDelete,
+    openAccessModal,
+    closeAccessModal,
   } = logic; // ดึงสถานะและฟังก์ชันต่างๆ จาก hook logic
 
   if (isLoading && !companyInfo) {
@@ -1052,10 +1089,17 @@ export function OrganizationPage() {
               openDeleteModal={openDeleteModal}
               handleSyncDevice={handleSyncDevice}
               syncingDevices={syncingDevices}
+              openAccessModal={openAccessModal}
             />
           )}
         </div>
       </div>
+
+      <DeviceAccessModal
+        isOpen={accessModal.isOpen}
+        onClose={closeAccessModal}
+        device={accessModal.device}
+      />
 
       <Modal
         isOpen={deptModal.isOpen}
