@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Modal } from "./Modal";
 import { Button } from "../atoms/Button";
 import { Input } from "../atoms/Input";
-import { StatusBadge } from "../atoms/StatusBadge";
+import { Avatar } from "../atoms/Avatar";
 import { updateDevice } from "../../store/slices/companySlice";
 import { UsersIcon } from "../atoms/Icons";
 
@@ -201,7 +201,7 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
                     onClick={() => handleToggleEmployee(emp.id)}
                     aria-pressed={isSelected}
                     className={`
-                      group flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 text-left
+                      group flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all duration-200 text-left w-full
                       ${
                         isSelected
                           ? "bg-primary/5 border-primary/30 shadow-sm"
@@ -212,7 +212,7 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
                     <div className="flex items-center gap-3">
                       <div
                         className={`
-                        w-5 h-5 rounded border flex items-center justify-center transition-colors
+                        w-5 h-5 rounded border flex items-center justify-center transition-colors shrink-0
                         ${
                           isSelected
                             ? "bg-primary border-primary text-white"
@@ -236,6 +236,7 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
                           </svg>
                         )}
                       </div>
+                      <Avatar alt={emp.name} size="sm" />
                       <div>
                         <div
                           className={`font-medium ${
@@ -250,11 +251,15 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
                       </div>
                     </div>
                     <div>
-                      <StatusBadge
-                        status={isSelected ? "Authorized" : "No Access"}
-                        type={isSelected ? "success" : "neutral"}
-                        className="text-xs"
-                      />
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                          isSelected
+                            ? "bg-success/10 text-success border-success/20"
+                            : "bg-gray-100 text-text-sub border-gray-200"
+                        }`}
+                      >
+                        {isSelected ? "Authorized" : "No Access"}
+                      </span>
                     </div>
                   </button>
                 );
