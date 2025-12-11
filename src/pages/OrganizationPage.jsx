@@ -897,6 +897,29 @@ export function OrganizationPage() {
     Array.isArray(devices) &&
     devices.some((d) => d.status != null && d.status !== "");
 
+  const normalizeToHttps = (url) => {
+    if (!url) return url;
+    const trimmed = String(url).trim();
+    const lower = trimmed.toLowerCase();
+    if (lower.startsWith("http://")) {
+      return "https://" + trimmed.slice(7);
+    }
+    if (lower.startsWith("https://")) {
+      return trimmed;
+    }
+    if (trimmed.startsWith("//")) {
+      return "https:" + trimmed;
+    }
+    return "https://" + trimmed;
+  };
+
+  const safeDevices = Array.isArray(devices)
+    ? devices.map((d) => ({
+        ...d,
+        locationURL: normalizeToHttps(d.locationURL),
+      }))
+    : devices;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -978,7 +1001,7 @@ export function OrganizationPage() {
 
           {activeTab === "devices" && (
             <DevicesSection
-              devices={devices}
+              devices={safeDevices}
               hasDeviceStatus={hasDeviceStatus}
               openDeviceModal={openDeviceModal}
               openDeleteModal={openDeleteModal}
@@ -1098,7 +1121,7 @@ export function OrganizationPage() {
               name="locationURL"
               value={deviceModal.data?.locationURL || ""}
               onChange={handleDeviceInputChange}
-              placeholder="http://..."
+              placeholder="https://..."
               type="url"
               inputMode="url"
               pattern="https://.*"
