@@ -9,6 +9,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { OrganizationPage } from "./pages/OrganizationPage";
 import { EmployeePage } from "./pages/EmployeePage";
+import { ShiftPage } from "./pages/ShiftPage";
+import { AttendancePage } from "./pages/AttendancePage";
 import { MainLayout } from "./layouts/MainLayout";
 import { useAuth } from "./hooks/useAuth";
 
@@ -62,14 +64,8 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/organization" element={<OrganizationPage />} />
           <Route path="/employees" element={<EmployeePage />} />
-          <Route
-            path="/shifts"
-            element={<PlaceholderPage title="Shift Management" />}
-          />
-          <Route
-            path="/attendance"
-            element={<PlaceholderPage title="Attendance Monitor" />}
-          />
+          <Route path="/shifts" element={<ShiftPage />} />
+          <Route path="/attendance" element={<AttendancePage />} />
           <Route
             path="/requests"
             element={<PlaceholderPage title="Request Management" />}

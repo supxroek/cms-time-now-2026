@@ -29,4 +29,9 @@ export const API_ENDPOINTS = {
   REQUESTS: {
     PENDING: "/requests/pending",
   },
+  SHIFTS: {
+    BASE: "/shifts",
+    ASSIGN: "/shifts/assign",
+    BY_ID: (id) => `/shifts/${id}`,
+  },
 };
