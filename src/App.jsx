@@ -7,8 +7,11 @@ import {
 } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { OrganizationPage } from "./pages/OrganizationPage";
 import { MainLayout } from "./layouts/MainLayout";
 import { useAuth } from "./hooks/useAuth";
+
+import PropTypes from "prop-types";
 
 // Component สำหรับป้องกัน Route ที่ต้อง Login
 const ProtectedRoute = () => {
@@ -39,6 +42,11 @@ const PlaceholderPage = ({ title }) => (
   </div>
 );
 
+// กำหนด PropTypes สำหรับ PlaceholderPage
+PlaceholderPage.propTypes = {
+  title: PropTypes.string.isRequired,
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -51,10 +59,7 @@ function App() {
         {/* Protected Routes (ต้อง Login ก่อน) */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route
-            path="/organization"
-            element={<PlaceholderPage title="Organization Management" />}
-          />
+          <Route path="/organization" element={<OrganizationPage />} />
           <Route
             path="/employees"
             element={<PlaceholderPage title="Employee Management" />}

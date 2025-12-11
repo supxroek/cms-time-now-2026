@@ -1,9 +1,12 @@
+
 export function StatusBadge({ status }) {
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
       case "ontime":
       case "working":
       case "present":
+      case "online":
+      case "active":
         return "bg-success/10 text-success border-success/20";
       case "late":
       case "break":
@@ -11,6 +14,7 @@ export function StatusBadge({ status }) {
       case "absent":
       case "leave":
       case "offline":
+      case "inactive":
         return "bg-danger/10 text-danger border-danger/20";
       default:
         return "bg-gray-100 text-gray-600 border-gray-200";

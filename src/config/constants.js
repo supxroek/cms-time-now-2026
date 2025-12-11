@@ -10,6 +10,15 @@ export const API_ENDPOINTS = {
     PROFILE: "/company/profile",
     EMPLOYEES: "/company/employees",
   },
+  DEPARTMENTS: {
+    BASE: "/company/departments",
+    BY_ID: (id) => `/company/departments/${id}`,
+  },
+  DEVICES: {
+    BASE: "/devices",
+    SYNC: "/devices/sync-trigger",
+    BY_ID: (id) => `/devices/${id}`,
+  },
   ATTENDANCE: {
     CHECK_IN: "/attendance/check-in",
     CHECK_OUT: "/attendance/check-out",

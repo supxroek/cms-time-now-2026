@@ -6,12 +6,12 @@ import buddhistEra from "dayjs/plugin/buddhistEra";
 dayjs.extend(buddhistEra);
 dayjs.locale("th"); // Set default locale to Thai
 
-export const formatDate = (date, format = "D MMM BBBB") => {
+export const formatDate = (date, format = "ddd D MMM BBBB") => {
   if (!date) return "-";
   return dayjs(date).format(format);
 };
 
-export const formatTime = (date, format = "HH:mm") => {
+export const formatTime = (date, format = "HH:mm:ss") => {
   if (!date) return "-";
   return dayjs(date).format(format);
 };

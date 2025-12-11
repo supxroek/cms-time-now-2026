@@ -19,19 +19,19 @@ import PropTypes from "prop-types";
 
 const MenuIcon = ({ name }) => {
   switch (name) {
-    case "Dashboard":
+    case "แดชบอร์ด":
       return <DashboardIcon />;
-    case "Organization":
+    case "องค์กร":
       return <OrganizationIcon />;
-    case "Employees":
+    case "พนักงาน":
       return <EmployeesIcon />;
-    case "Shifts":
+    case "กะงาน":
       return <ClockIcon className="w-5 h-5" />;
-    case "Attendance":
+    case "การเข้าทำงาน":
       return <AttendanceIcon />;
-    case "Requests":
+    case "คำขอ":
       return <RequestsIcon />;
-    case "Reports":
+    case "รายงาน":
       return <ReportsIcon />;
     default:
       return null;
@@ -49,13 +49,13 @@ export function MainLayout() {
   }, [token, logout, location]);
 
   const menuItems = [
-    { name: "Dashboard", path: "/dashboard" },
-    { name: "Organization", path: "/organization" },
-    { name: "Employees", path: "/employees" },
-    { name: "Shifts", path: "/shifts" },
-    { name: "Attendance", path: "/attendance" },
-    { name: "Requests", path: "/requests" },
-    { name: "Reports", path: "/reports" },
+    { name: "แดชบอร์ด", path: "/dashboard" },
+    { name: "องค์กร", path: "/organization" },
+    { name: "พนักงาน", path: "/employees" },
+    { name: "กะงาน", path: "/shifts" },
+    { name: "การเข้าทำงาน", path: "/attendance" },
+    { name: "คำขอ", path: "/requests" },
+    { name: "รายงาน", path: "/reports" },
   ];
 
   return (
