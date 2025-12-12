@@ -16,6 +16,7 @@ export function Button({
       "bg-white border border-gray-200 text-text-sub hover:bg-gray-50 hover:text-text-main shadow-sm",
     outline: "border border-primary text-primary hover:bg-primary/5",
     danger: "bg-danger text-white hover:opacity-90 shadow-sm",
+    warning: "bg-warning text-white hover:opacity-90 shadow-sm",
     ghost:
       "bg-transparent text-text-sub hover:bg-gray-100 hover:text-text-main",
   };

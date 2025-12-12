@@ -551,6 +551,18 @@ function InfoSection({
                   onChange={handleInputChange}
                 />
               </div>
+              <div>
+                <Label htmlFor="report_date">วันที่ตัดรอบรายงาน (1-31)</Label>
+                <Input
+                  id="report_date"
+                  name="report_date"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={formData.report_date || ""}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
           </div>
         </div>

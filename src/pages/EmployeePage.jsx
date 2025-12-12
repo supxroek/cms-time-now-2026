@@ -4,6 +4,7 @@ import {
   fetchEmployees,
   updateEmployee,
   resignEmployee,
+  deleteEmployee,
 } from "../store/slices/employeeSlice";
 import { fetchDepartments } from "../store/slices/companySlice";
 import { Button } from "../components/atoms/Button";
@@ -11,7 +12,12 @@ import { Input } from "../components/atoms/Input";
 import { Label } from "../components/atoms/Label";
 import { StatusBadge } from "../components/atoms/StatusBadge";
 import { Modal, ConfirmModal } from "../components/molecules/Modal";
-import { EditIcon, DeleteIcon, UsersIcon } from "../components/atoms/Icons";
+import {
+  EditIcon,
+  DeleteIcon,
+  UsersIcon,
+  UserXIcon,
+} from "../components/atoms/Icons";
 import { formatDate } from "../utils/dateUtils";
 
 export function EmployeePage() {
@@ -22,6 +28,10 @@ export function EmployeePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editModal, setEditModal] = useState({ isOpen: false, employee: null });
   const [resignModal, setResignModal] = useState({
+    isOpen: false,
+    employee: null,
+  });
+  const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     employee: null,
   });
@@ -58,6 +68,10 @@ export function EmployeePage() {
     setResignModal({ isOpen: true, employee });
   };
 
+  const handleDeleteClick = (employee) => {
+    setDeleteModal({ isOpen: true, employee });
+  };
+
   const handleEditSubmit = async () => {
     try {
       const dataToSubmit = {
@@ -90,6 +104,15 @@ export function EmployeePage() {
       setResignModal({ isOpen: false, employee: null });
     } catch (error) {
       console.error("Failed to resign employee:", error);
+    }
+  };
+
+  const handleDeleteSubmit = async () => {
+    try {
+      await dispatch(deleteEmployee(deleteModal.employee.id)).unwrap();
+      setDeleteModal({ isOpen: false, employee: null });
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
     }
   };
 
@@ -155,12 +178,19 @@ export function EmployeePage() {
             {!emp.resign_date && (
               <button
                 onClick={() => handleResignClick(emp)}
-                className="p-1 text-danger hover:bg-danger/10 rounded transition-colors"
+                className="p-1 text-warning hover:bg-warning/10 rounded transition-colors"
                 title="แจ้งลาออก"
               >
-                <DeleteIcon className="w-4 h-4" />
+                <UserXIcon className="w-4 h-4" />
               </button>
             )}
+            <button
+              onClick={() => handleDeleteClick(emp)}
+              className="p-1 text-danger hover:bg-danger/10 rounded transition-colors"
+              title="ลบข้อมูลถาวร"
+            >
+              <DeleteIcon className="w-4 h-4" />
+            </button>
           </div>
         </td>
       </tr>
@@ -307,31 +337,63 @@ export function EmployeePage() {
       </Modal>
 
       {/* Resign Modal */}
-      <ConfirmModal
+      <Modal
         isOpen={resignModal.isOpen}
         onClose={() => setResignModal({ isOpen: false, employee: null })}
-        onConfirm={handleResignSubmit}
-        title="ยืนยันการลาออก"
-        message={
-          <div className="space-y-4">
-            <p>
-              คุณต้องการบันทึกสถานะลาออกของพนักงาน "{resignModal.employee?.name}
-              " ใช่หรือไม่?
-            </p>
-            <div>
-              <Label>วันที่ลาออก</Label>
-              <Input
-                type="date"
-                value={resignDate}
-                onChange={(e) => setResignDate(e.target.value)}
-              />
-            </div>
-            <p className="text-sm text-danger">
-              * ข้อมูลพนักงานจะไม่ถูกลบ แต่จะถูกเปลี่ยนสถานะเป็น "ลาออก"
-            </p>
-          </div>
+        title="บันทึกการลาออก"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setResignModal({ isOpen: false, employee: null })}
+            >
+              ยกเลิก
+            </Button>
+            <Button variant="warning" onClick={handleResignSubmit}>
+              ยืนยันการลาออก
+            </Button>
+          </>
         }
-        confirmText="ยืนยัน"
+      >
+        <div className="space-y-4">
+          <p className="text-text-sub">
+            คุณต้องการบันทึกสถานะลาออกของพนักงาน{" "}
+            <span className="font-semibold text-text-main">
+              {resignModal.employee?.name}
+            </span>{" "}
+            ใช่หรือไม่?
+          </p>
+          <div>
+            <Label>วันที่ลาออก</Label>
+            <Input
+              type="date"
+              value={resignDate}
+              onChange={(e) => setResignDate(e.target.value)}
+            />
+          </div>
+          <p className="text-sm text-text-sub">
+            * ข้อมูลพนักงานจะไม่ถูกลบ แต่จะถูกเปลี่ยนสถานะเป็น "ลาออก"
+          </p>
+        </div>
+      </Modal>
+
+      {/* Delete Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, employee: null })}
+        onConfirm={handleDeleteSubmit}
+        title="ลบข้อมูลพนักงาน"
+        message={
+          <>
+            คุณต้องการลบข้อมูลพนักงาน{" "}
+            <span className="font-semibold text-text-main">
+              {deleteModal.employee?.name}
+            </span>{" "}
+            ออกจากระบบอย่างถาวรใช่หรือไม่? การกระทำนี้ไม่สามารถเรียกคืนได้
+          </>
+        }
+        confirmText="ลบข้อมูล"
+        cancelText="ยกเลิก"
         variant="danger"
       />
     </div>

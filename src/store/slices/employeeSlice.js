@@ -84,6 +84,23 @@ export const resignEmployee = createAsyncThunk(
   }
 );
 
+export const deleteEmployee = createAsyncThunk(
+  "employee/deleteEmployee",
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(
+        `${API_BASE_URL}${API_ENDPOINTS.COMPANY.EMPLOYEES}/${id}`,
+        getAuthHeader()
+      );
+      return id;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error || "Failed to delete employee"
+      );
+    }
+  }
+);
+
 const initialState = {
   employees: [],
   currentEmployee: null,
@@ -187,6 +204,25 @@ const employeeSlice = createSlice({
       }
     });
     builder.addCase(resignEmployee.rejected, (state, action) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    });
+
+    // Delete Employee
+    builder.addCase(deleteEmployee.pending, (state) => {
+      state.isLoading = true;
+      state.error = null;
+      state.successMessage = null;
+    });
+    builder.addCase(deleteEmployee.fulfilled, (state, action) => {
+      state.isLoading = false;
+      state.successMessage = "Employee deleted successfully";
+      state.employees = state.employees.filter((e) => e.id !== action.payload);
+      if (state.currentEmployee?.id === action.payload) {
+        state.currentEmployee = null;
+      }
+    });
+    builder.addCase(deleteEmployee.rejected, (state, action) => {
       state.isLoading = false;
       state.error = action.payload;
     });
