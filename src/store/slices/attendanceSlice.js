@@ -46,9 +46,31 @@ export const checkOut = createAsyncThunk(
   }
 );
 
+export const fetchAttendanceHistory = createAsyncThunk(
+  "attendance/fetchHistory",
+  async (params, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}${API_ENDPOINTS.ATTENDANCE.HISTORY}`,
+        {
+          ...getAuthHeader(),
+          params,
+          timeout: API_TIMEOUT,
+        }
+      );
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data || "Failed to fetch attendance history"
+      );
+    }
+  }
+);
+
 // สถานะเริ่มต้นของ state
 const initialState = {
   todayRecord: null,
+  history: [],
   status: "idle", // 'idle' | 'working' | 'break'
   isLoading: false,
   error: null,
@@ -102,6 +124,20 @@ const attendanceSlice = createSlice({
       .addCase(checkOut.rejected, (state, action) => {
         state.isLoading = false; // หยุดโหลด
         state.error = action.payload; // ข้อความแสดงข้อผิดพลาด
+      })
+
+      // Fetch History
+      .addCase(fetchAttendanceHistory.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAttendanceHistory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.history = action.payload;
+      })
+      .addCase(fetchAttendanceHistory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });

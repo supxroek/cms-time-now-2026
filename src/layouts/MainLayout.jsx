@@ -5,7 +5,6 @@ import { UserProfile } from "../components/molecules/UserProfile";
 import { Button } from "../components/atoms/Button";
 import { isTokenExpired } from "../utils/authUtils";
 import {
-  DashboardIcon,
   OrganizationIcon,
   EmployeesIcon,
   AttendanceIcon,
@@ -19,16 +18,15 @@ import PropTypes from "prop-types";
 
 const MenuIcon = ({ name }) => {
   switch (name) {
-    case "แดชบอร์ด":
-      return <DashboardIcon />;
+    case "การเข้าทำงาน":
+      return <AttendanceIcon />;
     case "องค์กร":
       return <OrganizationIcon />;
     case "พนักงาน":
       return <EmployeesIcon />;
     case "กะงาน":
       return <ClockIcon className="w-5 h-5" />;
-    case "การเข้าทำงาน":
-      return <AttendanceIcon />;
+
     case "คำขอ":
       return <RequestsIcon />;
     case "รายงาน":
@@ -49,11 +47,10 @@ export function MainLayout() {
   }, [token, logout, location]);
 
   const menuItems = [
-    { name: "แดชบอร์ด", path: "/dashboard" },
+    { name: "การเข้าทำงาน", path: "/attendance" },
     { name: "องค์กร", path: "/organization" },
     { name: "พนักงาน", path: "/employees" },
     { name: "กะงาน", path: "/shifts" },
-    { name: "การเข้าทำงาน", path: "/attendance" },
     { name: "คำขอ", path: "/requests" },
     { name: "รายงาน", path: "/reports" },
   ];

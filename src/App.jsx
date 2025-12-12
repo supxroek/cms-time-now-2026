@@ -6,11 +6,12 @@ import {
   Outlet,
 } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/DashboardPage";
 import { OrganizationPage } from "./pages/OrganizationPage";
 import { EmployeePage } from "./pages/EmployeePage";
 import { ShiftPage } from "./pages/ShiftPage";
 import { AttendancePage } from "./pages/AttendancePage";
+import { RequestPage } from "./pages/RequestPage";
+import { ReportPage } from "./pages/ReportPage";
 import { MainLayout } from "./layouts/MainLayout";
 import { useAuth } from "./hooks/useAuth";
 
@@ -61,22 +62,16 @@ function App() {
 
         {/* Protected Routes (ต้อง Login ก่อน) */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
+          {/* <Route path="/dashboard" element={<DashboardPage />} /> */}
           <Route path="/organization" element={<OrganizationPage />} />
           <Route path="/employees" element={<EmployeePage />} />
           <Route path="/shifts" element={<ShiftPage />} />
           <Route path="/attendance" element={<AttendancePage />} />
-          <Route
-            path="/requests"
-            element={<PlaceholderPage title="Request Management" />}
-          />
-          <Route
-            path="/reports"
-            element={<PlaceholderPage title="Reports" />}
-          />
+          <Route path="/requests" element={<RequestPage />} />
+          <Route path="/reports" element={<ReportPage />} />
 
           {/* Redirect root to dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/attendance" replace />} />
         </Route>
 
         {/* 404 Not Found - Redirect to root */}
