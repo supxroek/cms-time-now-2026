@@ -96,7 +96,7 @@ export const DashboardIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
-export const OrganizationIcon = ({ className = "w-5 h-5" }) => (
+export const CompanyIcon = ({ className = "w-5 h-5" }) => (
   <svg
     className={className}
     fill="none"
@@ -283,7 +283,7 @@ UserCheckIcon.propTypes = iconPropTypes;
 UserXIcon.propTypes = iconPropTypes;
 CalendarIcon.propTypes = iconPropTypes;
 DashboardIcon.propTypes = iconPropTypes;
-OrganizationIcon.propTypes = iconPropTypes;
+CompanyIcon.propTypes = iconPropTypes;
 EmployeesIcon.propTypes = iconPropTypes;
 AttendanceIcon.propTypes = iconPropTypes;
 RequestsIcon.propTypes = iconPropTypes;

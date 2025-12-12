@@ -24,7 +24,7 @@ import { Switch } from "../components/atoms/Switch";
 import { StatusBadge } from "../components/atoms/StatusBadge";
 import { Tooltip } from "../components/atoms/Tooltip";
 import {
-  OrganizationIcon,
+  CompanyIcon,
   DevicesIcon,
   SyncIcon,
   EditIcon,
@@ -72,7 +72,7 @@ InfoRow.propTypes = {
 // ========================================================================
 // ========================= ส่วนจัดการ logic ของหน้าจัดการองค์กร ================
 // ========================================================================
-function useOrganizationLogic() {
+function useCompanyLogic() {
   const dispatch = useDispatch();
   const { companyInfo, departments, devices, isLoading } = useSelector(
     (state) => state.company
@@ -931,8 +931,8 @@ DevicesSection.propTypes = {
 // ========================================================================
 
 // ฟังก์ชันหลักของหน้าจัดการองค์กร
-export function OrganizationPage() {
-  const logic = useOrganizationLogic(); // ใช้ hook logic สำหรับจัดการสถานะและฟังก์ชันต่างๆ
+export function CompanyPage() {
+  const logic = useCompanyLogic(); // ใช้ hook logic สำหรับจัดการสถานะและฟังก์ชันต่างๆ
   const {
     companyInfo,
     departments,
@@ -1006,7 +1006,7 @@ export function OrganizationPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-primary/10 rounded-lg text-primary">
-          <OrganizationIcon className="w-6 h-6" />
+          <CompanyIcon className="w-6 h-6" />
         </div>
         <div>
           <h2 className="text-2xl font-bold text-text-main font-display">

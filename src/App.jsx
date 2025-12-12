@@ -6,7 +6,7 @@ import {
   Outlet,
 } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
-import { OrganizationPage } from "./pages/OrganizationPage";
+import { CompanyPage } from "./pages/CompanyPage";
 import { EmployeePage } from "./pages/EmployeePage";
 import { ShiftPage } from "./pages/ShiftPage";
 import { AttendancePage } from "./pages/AttendancePage";
@@ -63,7 +63,7 @@ function App() {
         {/* Protected Routes (ต้อง Login ก่อน) */}
         <Route element={<ProtectedRoute />}>
           {/* <Route path="/dashboard" element={<DashboardPage />} /> */}
-          <Route path="/organization" element={<OrganizationPage />} />
+          <Route path="/company" element={<CompanyPage />} />
           <Route path="/employees" element={<EmployeePage />} />
           <Route path="/shifts" element={<ShiftPage />} />
           <Route path="/attendance" element={<AttendancePage />} />

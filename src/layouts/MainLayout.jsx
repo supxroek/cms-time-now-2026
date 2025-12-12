@@ -5,7 +5,7 @@ import { UserProfile } from "../components/molecules/UserProfile";
 import { Button } from "../components/atoms/Button";
 import { isTokenExpired } from "../utils/authUtils";
 import {
-  OrganizationIcon,
+  CompanyIcon,
   EmployeesIcon,
   AttendanceIcon,
   RequestsIcon,
@@ -20,8 +20,8 @@ const MenuIcon = ({ name }) => {
   switch (name) {
     case "การเข้าทำงาน":
       return <AttendanceIcon />;
-    case "องค์กร":
-      return <OrganizationIcon />;
+    case "บริษัท":
+      return <CompanyIcon />;
     case "พนักงาน":
       return <EmployeesIcon />;
     case "กะงาน":
@@ -48,7 +48,7 @@ export function MainLayout() {
 
   const menuItems = [
     { name: "การเข้าทำงาน", path: "/attendance" },
-    { name: "องค์กร", path: "/organization" },
+    { name: "บริษัท", path: "/company" },
     { name: "พนักงาน", path: "/employees" },
     { name: "กะงาน", path: "/shifts" },
     { name: "คำขอ", path: "/requests" },
