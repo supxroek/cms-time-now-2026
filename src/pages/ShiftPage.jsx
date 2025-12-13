@@ -53,6 +53,8 @@ export function ShiftPage() {
     employeeId: [],
     is_active: true,
     ot_enabled: false,
+    is_specific: false,
+    month: new Date().getMonth() + 1,
     break_enabled: true,
     assign_type: "individual", // 'individual' or 'department'
     departmentId: [],
@@ -108,8 +110,10 @@ export function ShiftPage() {
         break_end_time: shift.break_end_time || "",
         work_days: workDays,
         employeeId: employeeIds,
-        is_active: shift.is_active === undefined ? true : shift.is_active,
-        ot_enabled: shift.ot_enabled || false,
+        is_active: shift.is_shift === 1, // Map is_shift to is_active
+        ot_enabled: shift.is_night_shift === 1, // Map is_night_shift to ot_enabled
+        is_specific: shift.is_specific === 1,
+        month: shift.month || new Date().getMonth() + 1,
         break_enabled: shift.is_break === 1,
         assign_type: "individual", // Default to individual for edit for now
         departmentId: [],
@@ -126,6 +130,8 @@ export function ShiftPage() {
         employeeId: [],
         is_active: true,
         ot_enabled: false,
+        is_specific: false,
+        month: new Date().getMonth() + 1,
         break_enabled: true,
         assign_type: "individual",
         departmentId: [],
@@ -148,6 +154,8 @@ export function ShiftPage() {
       employeeId: [],
       is_active: true,
       ot_enabled: false,
+      is_specific: false,
+      month: new Date().getMonth() + 1,
       break_enabled: true,
       assign_type: "individual",
       departmentId: [],
@@ -182,8 +190,10 @@ export function ShiftPage() {
           : null,
         break_end_time: formData.break_enabled ? formData.break_end_time : null,
         employeeId: finalEmployeeIds,
-        is_active: formData.is_active,
-        ot_enabled: formData.ot_enabled,
+        is_shift: formData.is_active ? 1 : 0, // Map is_active to is_shift
+        is_night_shift: formData.ot_enabled ? 1 : 0, // Map ot_enabled to is_night_shift
+        is_specific: formData.is_specific ? 1 : 0,
+        month: formData.is_specific ? formData.month : null,
       };
 
       if (editingShift) {
@@ -307,7 +317,7 @@ export function ShiftPage() {
   const handleShiftStatusChange = async (shift, checked) => {
     try {
       await dispatch(
-        updateShift({ id: shift.id, data: { is_active: checked } })
+        updateShift({ id: shift.id, data: { is_shift: checked ? 1 : 0 } })
       ).unwrap();
     } catch (error) {
       console.error("Failed to update shift status:", error);

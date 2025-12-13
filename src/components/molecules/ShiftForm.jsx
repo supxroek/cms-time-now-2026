@@ -66,26 +66,65 @@ export function ShiftForm({
       </div>
 
       {formData.ot_enabled && (
-        <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
-          <Label className="mb-2 block">รายการ OT ที่มีอยู่</Label>
-          {overtimes.length > 0 ? (
-            <ul className="space-y-1 text-sm text-text-sub">
-              {overtimes.map((ot) => (
-                <li key={ot.id} className="flex justify-between">
-                  <span>{ot.overTimeName || ot.name}</span>
-                  <span>
-                    {(ot.ot_start_time || ot.start_time)?.slice(0, 5)} -{" "}
-                    {(ot.ot_end_time || ot.end_time)?.slice(0, 5)}{" "}
-                    {ot.rate ? `(x${ot.rate})` : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-text-muted">
-              ยังไม่มีรายการ OT (ไปที่แท็บจัดการการทำงานล่วงเวลาเพื่อสร้าง)
-            </p>
+        <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+          <div className="flex justify-between items-center">
+            <Label>กำหนดเฉพาะเดือน</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-text-sub">
+                {formData.is_specific ? "ใช่" : "ไม่ใช่"}
+              </span>
+              <Switch
+                checked={formData.is_specific}
+                onChange={(checked) =>
+                  setFormData({ ...formData, is_specific: checked })
+                }
+              />
+            </div>
+          </div>
+
+          {formData.is_specific && (
+            <div>
+              <Label>เลือกเดือน</Label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                value={formData.month}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    month: Number.parseInt(e.target.value),
+                  })
+                }
+              >
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(0, i).toLocaleString("th-TH", { month: "long" })}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
+
+          <div className="bg-gray-50 p-3 rounded-md border border-gray-200">
+            <Label className="mb-2 block">รายการ OT ที่มีอยู่</Label>
+            {overtimes.length > 0 ? (
+              <ul className="space-y-1 text-sm text-text-sub">
+                {overtimes.map((ot) => (
+                  <li key={ot.id} className="flex justify-between">
+                    <span>{ot.overTimeName || ot.name}</span>
+                    <span>
+                      {(ot.ot_start_time || ot.start_time)?.slice(0, 5)} -{" "}
+                      {(ot.ot_end_time || ot.end_time)?.slice(0, 5)}{" "}
+                      {ot.rate ? `(x${ot.rate})` : ""}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-text-muted">
+                ยังไม่มีรายการ OT (ไปที่แท็บจัดการการทำงานล่วงเวลาเพื่อสร้าง)
+              </p>
+            )}
+          </div>
         </div>
       )}
 
