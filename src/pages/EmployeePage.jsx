@@ -57,7 +57,7 @@ export function EmployeePage() {
 
   // Memoize active departments for the dropdown
   const activeDepartments = useMemo(() => {
-    return departments.filter((d) => d.is_active);
+    return departments || [];
   }, [departments]);
 
   // Memoize department lookup for faster table rendering

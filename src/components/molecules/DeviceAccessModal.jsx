@@ -1,15 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { Modal } from "./Modal";
 import { Button } from "../atoms/Button";
 import { Input } from "../atoms/Input";
 import { Avatar } from "../atoms/Avatar";
-import { updateDevice } from "../../store/slices/companySlice";
 import { UsersIcon } from "../atoms/Icons";
 
-export function DeviceAccessModal({ isOpen, onClose, device }) {
-  const dispatch = useDispatch();
+export function DeviceAccessModal({ isOpen, onClose, device, onSave }) {
   const { employees } = useSelector((state) => state.employee);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
@@ -67,13 +65,8 @@ export function DeviceAccessModal({ isOpen, onClose, device }) {
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
-      await dispatch(
-        updateDevice({
-          id: device.id,
-          employeeIds: selectedEmployeeIds,
-        })
-      ).unwrap();
-      onClose();
+      await onSave(device.id, selectedEmployeeIds);
+      // onClose is handled by parent or after save
     } catch (error) {
       console.error("Failed to update device access:", error);
     } finally {
@@ -281,4 +274,5 @@ DeviceAccessModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   device: PropTypes.object,
+  onSave: PropTypes.func.isRequired,
 };

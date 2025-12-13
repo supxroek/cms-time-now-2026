@@ -33,7 +33,6 @@ import {
 } from "../components/atoms/Icons";
 import { Modal, ConfirmModal } from "../components/molecules/Modal";
 import { DeviceAccessModal } from "../components/molecules/DeviceAccessModal";
-
 import PropTypes from "prop-types";
 
 // จัดการปุ่มแท็บ
@@ -85,6 +84,10 @@ function useCompanyLogic() {
   const [syncingDevices, setSyncingDevices] = useState(new Set());
   const [isTogglingDepartment, setIsTogglingDepartment] = useState(false);
 
+  // Local state for optimistic updates
+  const [localDepartments, setLocalDepartments] = useState([]);
+  const [localDevices, setLocalDevices] = useState([]);
+
   const [deptModal, setDeptModal] = useState({
     isOpen: false,
     mode: "add",
@@ -114,8 +117,23 @@ function useCompanyLogic() {
     dispatch(fetchEmployees());
   }, [dispatch]);
 
-  // ========================= ส่วนจัดการฟอร์มข้อมูลบริษัท =========================
-  // จัดการการเปลี่ยนแปลงข้อมูลฟอร์ม
+  // Sync local state with Redux state
+  useEffect(() => {
+    // Defer update to avoid synchronous setState inside effect which can
+    // trigger cascading renders. Using a microtask/timeout schedules the
+    // update after the current render completes.
+    const t = setTimeout(() => setLocalDepartments(departments || []), 0);
+    return () => clearTimeout(t);
+  }, [departments]);
+
+  useEffect(() => {
+    // Defer update to avoid synchronous setState inside effect which can
+    // trigger cascading renders. Using a microtask/timeout schedules the
+    // update after the current render completes.
+    const t = setTimeout(() => setLocalDevices(devices || []), 0);
+    return () => clearTimeout(t);
+  }, [devices]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -179,24 +197,50 @@ function useCompanyLogic() {
     return errors;
   };
   // จัดการการส่งข้อมูลฟอร์มแผนก
-  const handleDeptSubmit = (e) => {
+  const handleDeptSubmit = async (e) => {
     e.preventDefault();
     const errors = validateDepartment(deptModal.data || {});
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
-    const action = deptModal.mode === "add" ? addDepartment : updateDepartment;
-    dispatch(action(deptModal.data))
-      .unwrap()
-      .then(() => {
-        closeDeptModal();
-        // ดึงข้อมูลใหม่ทันทีเพื่อให้แนใจว่าข้อมูลตรงกับฐานข้อมูล
-        dispatch(fetchDepartments());
-      })
-      .catch((err) => console.error(err));
+
+    const isAdd = deptModal.mode === "add";
+    const data = deptModal.data;
+
+    // Optimistic Update
+    if (isAdd) {
+      const tempId = `temp-${Date.now()}`;
+      setLocalDepartments((prev) => [...prev, { ...data, id: tempId }]);
+    } else {
+      setLocalDepartments((prev) =>
+        prev.map((d) => (d.id === data.id ? { ...d, ...data } : d))
+      );
+    }
+
+    closeDeptModal();
+
+    try {
+      if (isAdd) {
+        await dispatch(addDepartment(data)).unwrap();
+      } else {
+        // Fix for 400 Bad Request: Only send necessary fields
+        const payload = {
+          id: data.id,
+          departmentName: data.departmentName,
+          headDep_name: data.headDep_name,
+          headDep_email: data.headDep_email,
+          headDep_tel: data.headDep_tel,
+        };
+        await dispatch(updateDepartment(payload)).unwrap();
+      }
+      dispatch(fetchDepartments());
+    } catch (err) {
+      console.error(err);
+      setLocalDepartments(departments || []); // Revert
+    }
   };
-  // จัดการการเปลี่ยนแปลงข้อมูลฟอร์มแผนก
+
   const handleDeptInputChange = (e) => {
     const { name, value } = e.target;
     setDeptModal((prev) => ({
@@ -229,25 +273,42 @@ function useCompanyLogic() {
     return errors;
   };
   // จัดการการส่งข้อมูลฟอร์มอุปกรณ์
-  const handleDeviceSubmit = (e) => {
+  const handleDeviceSubmit = async (e) => {
     e.preventDefault();
     const errors = validateDevice(deviceModal.data || {});
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
-    // เลือก action เพิ่มหรือแก้ไข
-    const action = deviceModal.mode === "add" ? addDevice : updateDevice;
-    dispatch(action(deviceModal.data))
-      .unwrap()
-      .then(() => {
-        closeDeviceModal();
-        // ดึงข้อมูลใหม่ทันทีเพื่อให้แนใจว่าข้อมูลตรงกับฐานข้อมูล
-        dispatch(fetchDevices());
-      })
-      .catch((err) => console.error(err));
+
+    const isAdd = deviceModal.mode === "add";
+    const data = deviceModal.data;
+
+    // Optimistic Update
+    if (isAdd) {
+      const tempId = `temp-${Date.now()}`;
+      setLocalDevices((prev) => [...prev, { ...data, id: tempId }]);
+    } else {
+      setLocalDevices((prev) =>
+        prev.map((d) => (d.id === data.id ? { ...d, ...data } : d))
+      );
+    }
+
+    closeDeviceModal();
+
+    try {
+      if (isAdd) {
+        await dispatch(addDevice(data)).unwrap();
+      } else {
+        await dispatch(updateDevice(data)).unwrap();
+      }
+      dispatch(fetchDevices());
+    } catch (err) {
+      console.error(err);
+      setLocalDevices(devices || []); // Revert
+    }
   };
-  // จัดการการเปลี่ยนแปลงข้อมูลฟอร์มอุปกรณ์
+
   const handleDeviceInputChange = (e) => {
     const { name, value } = e.target;
     setDeviceModal((prev) => ({
@@ -263,7 +324,6 @@ function useCompanyLogic() {
   // จัดการการสลับสถานะการใช้ระบบแผนก
   const handleCompanyDepartmentToggle = (checked) => {
     setIsTogglingDepartment(true);
-    // ส่งเฉพาะค่าที่เปลี่ยนแปลง (hasDepartment) เพื่อป้องกันปัญหา Validation กับ field อื่น
     dispatch(updateCompanyInfo({ hasDepartment: checked ? 1 : 0 }))
       .unwrap()
       .then(() => setIsTogglingDepartment(false))
@@ -316,17 +376,33 @@ function useCompanyLogic() {
   // ปิดโมดอลยืนยันการลบ
   const closeDeleteModal = () =>
     setDeleteModal({ isOpen: false, type: null, id: null, name: "" });
-  // จัดการการยืนยันลบแผนก/อุปกรณ์
-  const handleConfirmDelete = () => {
-    const action =
-      deleteModal.type === "department" ? deleteDepartment : deleteDevice;
-    dispatch(action(deleteModal.id))
-      .unwrap()
-      .then(() => closeDeleteModal())
-      .catch((err) => console.error(err));
+
+  const handleConfirmDelete = async () => {
+    const isDept = deleteModal.type === "department";
+    const id = deleteModal.id;
+
+    // Optimistic Update
+    if (isDept) {
+      setLocalDepartments((prev) => prev.filter((d) => d.id !== id));
+    } else {
+      setLocalDevices((prev) => prev.filter((d) => d.id !== id));
+    }
+
+    closeDeleteModal();
+
+    try {
+      const action = isDept ? deleteDepartment : deleteDevice;
+      await dispatch(action(id)).unwrap();
+      if (isDept) dispatch(fetchDepartments());
+      else dispatch(fetchDevices());
+    } catch (err) {
+      console.error(err);
+      // Revert
+      if (isDept) setLocalDepartments(departments || []);
+      else setLocalDevices(devices || []);
+    }
   };
 
-  // ========================= ส่วนจัดการสิทธิ์การเข้าถึงอุปกรณ์ ==============================
   const openAccessModal = (device) => {
     setAccessModal({ isOpen: true, device });
   };
@@ -335,10 +411,32 @@ function useCompanyLogic() {
     setAccessModal({ isOpen: false, device: null });
   };
 
+  const handleAccessSave = async (deviceId, employeeIds) => {
+    // Optimistic Update
+    setLocalDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, employeeIds } : d))
+    );
+
+    closeAccessModal();
+
+    try {
+      await dispatch(
+        updateDevice({
+          id: deviceId,
+          employeeIds: employeeIds,
+        })
+      ).unwrap();
+      dispatch(fetchDevices());
+    } catch (err) {
+      console.error(err);
+      setLocalDevices(devices || []); // Revert
+    }
+  };
+
   return {
     companyInfo,
-    departments,
-    devices,
+    departments: localDepartments, // Use local state
+    devices: localDevices, // Use local state
     isLoading,
     activeTab,
     setActiveTab,
@@ -372,6 +470,7 @@ function useCompanyLogic() {
     handleConfirmDelete,
     openAccessModal,
     closeAccessModal,
+    handleAccessSave,
   };
 }
 
@@ -740,15 +839,25 @@ function DepartmentsSection({
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openDeptModal("edit", dept)}
-                        className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                        className={`p-1 text-primary hover:bg-primary/10 rounded transition-colors ${
+                          String(dept.id).startsWith("temp-")
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                         title="แก้ไข"
+                        disabled={String(dept.id).startsWith("temp-")}
                       >
                         <EditIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => openDeleteModal("department", dept)}
-                        className="p-1 text-danger hover:bg-danger/10 rounded transition-colors"
+                        className={`p-1 text-danger hover:bg-danger/10 rounded transition-colors ${
+                          String(dept.id).startsWith("temp-")
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                         title="ลบ"
+                        disabled={String(dept.id).startsWith("temp-")}
                       >
                         <DeleteIcon className="w-4 h-4" />
                       </button>
@@ -871,6 +980,7 @@ function DevicesSection({
                       size="sm"
                       onClick={() => openAccessModal(device)}
                       className="text-xs px-3 py-1 h-auto"
+                      disabled={String(device.id).startsWith("temp-")}
                     >
                       <UsersIcon className="w-3 h-3 mr-1.5" />
                       จัดการสิทธิ์ ({device.employeeIds?.length || 0})
@@ -881,8 +991,16 @@ function DevicesSection({
                       <Tooltip text="Sync ข้อมูล">
                         <button
                           onClick={() => handleSyncDevice(device.id)}
-                          className="p-1 text-info hover:bg-info/10 rounded transition-colors"
-                          disabled={syncingDevices?.has(device.id)}
+                          className={`p-1 text-info hover:bg-info/10 rounded transition-colors ${
+                            syncingDevices?.has(device.id) ||
+                            String(device.id).startsWith("temp-")
+                              ? "opacity-50 cursor-not-allowed"
+                              : ""
+                          }`}
+                          disabled={
+                            syncingDevices?.has(device.id) ||
+                            String(device.id).startsWith("temp-")
+                          }
                         >
                           <SyncIcon
                             className={`w-4 h-4 ${
@@ -895,15 +1013,25 @@ function DevicesSection({
                       </Tooltip>
                       <button
                         onClick={() => openDeviceModal("edit", device)}
-                        className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                        className={`p-1 text-primary hover:bg-primary/10 rounded transition-colors ${
+                          String(device.id).startsWith("temp-")
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                         title="แก้ไข"
+                        disabled={String(device.id).startsWith("temp-")}
                       >
                         <EditIcon className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => openDeleteModal("device", device)}
-                        className="p-1 text-danger hover:bg-danger/10 rounded transition-colors"
+                        className={`p-1 text-danger hover:bg-danger/10 rounded transition-colors ${
+                          String(device.id).startsWith("temp-")
+                            ? "opacity-50 cursor-not-allowed"
+                            : ""
+                        }`}
                         title="ลบ"
+                        disabled={String(device.id).startsWith("temp-")}
                       >
                         <DeleteIcon className="w-4 h-4" />
                       </button>
@@ -944,7 +1072,7 @@ DevicesSection.propTypes = {
 
 // ฟังก์ชันหลักของหน้าจัดการองค์กร
 export function CompanyPage() {
-  const logic = useCompanyLogic(); // ใช้ hook logic สำหรับจัดการสถานะและฟังก์ชันต่างๆ
+  const logic = useCompanyLogic();
   const {
     companyInfo,
     departments,
@@ -980,6 +1108,7 @@ export function CompanyPage() {
     handleConfirmDelete,
     openAccessModal,
     closeAccessModal,
+    handleAccessSave,
   } = logic; // ดึงสถานะและฟังก์ชันต่างๆ จาก hook logic
 
   if (isLoading && !companyInfo) {
@@ -1111,6 +1240,7 @@ export function CompanyPage() {
         isOpen={accessModal.isOpen}
         onClose={closeAccessModal}
         device={accessModal.device}
+        onSave={handleAccessSave}
       />
 
       <Modal
