@@ -6,29 +6,43 @@ import {
   updateShift,
   deleteShift,
 } from "../store/slices/shiftSlice";
-import { fetchEmployees } from "../store/slices/employeeSlice";
-import { fetchDepartments } from "../store/slices/companySlice";
-import { Button } from "../components/atoms/Button";
-import { Input } from "../components/atoms/Input";
-import { Label } from "../components/atoms/Label";
-import { Switch } from "../components/atoms/Switch";
-import { Modal } from "../components/molecules/Modal";
 import {
-  ClockIcon,
-  EditIcon,
-  PlusIcon,
-  DeleteIcon,
-} from "../components/atoms/Icons";
+  fetchOvertimes,
+  createOvertime,
+  updateOvertime,
+  deleteOvertime,
+} from "../store/slices/overtimeSlice";
+import { fetchEmployees } from "../store/slices/employeeSlice";
+import {
+  fetchDepartments,
+  fetchCompanyInfo,
+} from "../store/slices/companySlice";
+import { Button } from "../components/atoms/Button";
+import { Modal } from "../components/molecules/Modal";
+import { ClockIcon, PlusIcon } from "../components/atoms/Icons";
+import { ShiftCard } from "../components/molecules/ShiftCard";
+import { OTCard } from "../components/molecules/OTCard";
+import { ShiftForm } from "../components/molecules/ShiftForm";
+import { OTForm } from "../components/molecules/OTForm";
 
 export function ShiftPage() {
   const dispatch = useDispatch();
   const { shifts, isLoading } = useSelector((state) => state.shifts);
+  const { overtimes } = useSelector((state) => state.overtime);
   const { employees } = useSelector((state) => state.employee);
-  const { departments } = useSelector((state) => state.company);
+  const { departments, companyInfo } = useSelector((state) => state.company);
+
+  const [activeTab, setActiveTab] = useState("shift");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isOTModalOpen, setIsOTModalOpen] = useState(false);
+  const [isOTDeleteModalOpen, setIsOTDeleteModalOpen] = useState(false);
+
   const [editingShift, setEditingShift] = useState(null);
   const [deletingShift, setDeletingShift] = useState(null);
+  const [editingOT, setEditingOT] = useState(null);
+  const [deletingOT, setDeletingOT] = useState(null);
+
   const [formData, setFormData] = useState({
     name: "",
     start_time: "",
@@ -43,12 +57,25 @@ export function ShiftPage() {
     assign_type: "individual", // 'individual' or 'department'
     departmentId: [],
   });
+
+  const [otFormData, setOtFormData] = useState({
+    name: "",
+    start_time: "",
+    end_time: "",
+    rate: 1.5,
+    employeeId: [],
+    assign_type: "individual",
+    departmentId: [],
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     dispatch(fetchShifts());
+    dispatch(fetchOvertimes());
     dispatch(fetchEmployees());
     dispatch(fetchDepartments());
+    dispatch(fetchCompanyInfo());
   }, [dispatch]);
 
   const parseArrayField = (val) => {
@@ -189,6 +216,104 @@ export function ShiftPage() {
     }
   };
 
+  // OT Handlers
+  const handleOpenOTModal = (ot = null) => {
+    setSearchTerm("");
+    if (ot) {
+      setEditingOT(ot);
+      const employeeIds = parseArrayField(ot.employeeId);
+      setOtFormData({
+        name: ot.overTimeName || ot.name || "",
+        start_time: ot.ot_start_time || ot.start_time || "",
+        end_time: ot.ot_end_time || ot.end_time || "",
+        rate: ot.rate || 1.5,
+        employeeId: employeeIds,
+        assign_type: "individual",
+        departmentId: [],
+      });
+    } else {
+      setEditingOT(null);
+      setOtFormData({
+        name: "",
+        start_time: "",
+        end_time: "",
+        rate: 1.5,
+        employeeId: [],
+        assign_type: "individual",
+        departmentId: [],
+      });
+    }
+    setIsOTModalOpen(true);
+  };
+
+  const handleCloseOTModal = () => {
+    setIsOTModalOpen(false);
+    setEditingOT(null);
+  };
+
+  const handleOTSubmit = async () => {
+    try {
+      let finalEmployeeIds = otFormData.employeeId;
+      if (
+        otFormData.assign_type === "department" &&
+        otFormData.departmentId.length > 0
+      ) {
+        const deptEmployees = employees
+          .filter((emp) => otFormData.departmentId.includes(emp.departmentId))
+          .map((emp) => emp.id);
+        finalEmployeeIds = [
+          ...new Set([...finalEmployeeIds, ...deptEmployees]),
+        ];
+      }
+
+      const payload = {
+        overTimeName: otFormData.name,
+        ot_start_time: otFormData.start_time,
+        ot_end_time: otFormData.end_time,
+        companyId: companyInfo?.id || 1,
+        employeeId: finalEmployeeIds,
+      };
+
+      if (editingOT) {
+        await dispatch(
+          updateOvertime({ id: editingOT.id, data: payload })
+        ).unwrap();
+      } else {
+        await dispatch(createOvertime(payload)).unwrap();
+      }
+      handleCloseOTModal();
+    } catch (error) {
+      console.error("Failed to save overtime:", error);
+    }
+  };
+
+  const handleOTDeleteClick = (ot) => {
+    setDeletingOT(ot);
+    setIsOTDeleteModalOpen(true);
+  };
+
+  const confirmOTDelete = async () => {
+    if (deletingOT) {
+      try {
+        await dispatch(deleteOvertime(deletingOT.id)).unwrap();
+        setIsOTDeleteModalOpen(false);
+        setDeletingOT(null);
+      } catch (error) {
+        console.error("Failed to delete overtime:", error);
+      }
+    }
+  };
+
+  const handleShiftStatusChange = async (shift, checked) => {
+    try {
+      await dispatch(
+        updateShift({ id: shift.id, data: { is_active: checked } })
+      ).unwrap();
+    } catch (error) {
+      console.error("Failed to update shift status:", error);
+    }
+  };
+
   const daysOfWeek = [
     { id: 0, label: "อา" },
     { id: 1, label: "จ" },
@@ -242,95 +367,63 @@ export function ShiftPage() {
     });
   };
 
-  const renderDayBadge = (day, workDays) => (
+  const renderLoading = (key = "loading") => [
+    <div key={key} className="col-span-full text-center py-8 text-text-sub">
+      Loading...
+    </div>,
+  ];
+
+  const renderEmpty = (key, text, buttonText, onClick) => [
     <div
-      key={day.id}
-      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-        workDays.includes(day.id)
-          ? "bg-primary text-white"
-          : "bg-gray-100 text-text-muted"
-      }`}
+      key={key}
+      className="col-span-full text-center py-12 bg-white rounded-lg border border-dashed border-gray-300"
     >
-      {day.label}
-    </div>
-  );
+      <ClockIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+      <p className="text-text-sub">{text}</p>
+      <Button variant="ghost" className="mt-2" onClick={onClick}>
+        {buttonText}
+      </Button>
+    </div>,
+  ];
 
-  const renderShiftCard = (shift) => {
-    const workDays = parseArrayField(shift.date);
-    return (
-      <div
+  const renderShiftContent = () => {
+    if (isLoading) return renderLoading();
+    if (safeShifts.length === 0)
+      return renderEmpty("empty", "ยังไม่มีข้อมูลกะงาน", "สร้างกะงานแรก", () =>
+        handleOpenModal()
+      );
+    return safeShifts.map((shift) => (
+      <ShiftCard
         key={shift.id}
-        className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-      >
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-text-main">
-              {shift.shift_name || shift.name}
-            </h3>
-            <div className="text-2xl font-bold text-primary mt-1">
-              {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
-            </div>
-          </div>
-          <div className="flex gap-1">
-            <button
-              onClick={() => handleOpenModal(shift)}
-              className="p-1 text-text-sub hover:text-primary hover:bg-primary/10 rounded transition-colors"
-              title="แก้ไข"
-            >
-              <EditIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={() => handleDeleteClick(shift)}
-              className="p-1 text-danger hover:bg-danger/10 rounded transition-colors"
-              title="ลบ"
-            >
-              <DeleteIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <div className="text-xs text-text-sub mb-2">วันทำงาน</div>
-            <div className="flex gap-1">
-              {daysOfWeek.map((day) => renderDayBadge(day, workDays))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+        shift={shift}
+        onEdit={handleOpenModal}
+        onDelete={handleDeleteClick}
+        onStatusChange={handleShiftStatusChange}
+      />
+    ));
   };
 
-  let renderShifts = [];
-  if (isLoading) {
-    renderShifts = [
-      <div
-        key="loading"
-        className="col-span-full text-center py-8 text-text-sub"
-      >
-        Loading...
-      </div>,
-    ];
-  } else if (safeShifts.length === 0) {
-    renderShifts = [
-      <div
-        key="empty"
-        className="col-span-full text-center py-12 bg-white rounded-lg border border-dashed border-gray-300"
-      >
-        <ClockIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <p className="text-text-sub">ยังไม่มีข้อมูลกะงาน</p>
-        <Button
-          variant="ghost"
-          className="mt-2"
-          onClick={() => handleOpenModal()}
-        >
-          สร้างกะงานแรก
-        </Button>
-      </div>,
-    ];
-  } else {
-    renderShifts = safeShifts.map(renderShiftCard);
-  }
+  const renderOvertimeContent = () => {
+    if (isLoading) return renderLoading();
+    if (!Array.isArray(overtimes) || overtimes.length === 0)
+      return renderEmpty(
+        "empty",
+        "ยังไม่มีข้อมูลการทำงานล่วงเวลา",
+        "สร้างรายการ OT แรก",
+        () => handleOpenOTModal()
+      );
+    return overtimes.map((ot) => (
+      <OTCard
+        key={ot.id}
+        ot={ot}
+        onEdit={handleOpenOTModal}
+        onDelete={handleOTDeleteClick}
+      />
+    ));
+  };
+
+  const renderContent =
+    activeTab === "shift" ? renderShiftContent() : renderOvertimeContent();
 
   return (
     <div className="space-y-6">
@@ -341,23 +434,53 @@ export function ShiftPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-text-main font-display">
-              จัดการกะงาน
+              {activeTab === "shift" ? "จัดการกะงาน" : "จัดการการทำงานล่วงเวลา"}
             </h2>
             <p className="text-text-sub text-sm">
-              กำหนดช่วงเวลาทำงานและวันทำงานสำหรับพนักงาน
+              {activeTab === "shift"
+                ? "กำหนดช่วงเวลาทำงานและวันทำงานสำหรับพนักงาน"
+                : "กำหนดเงื่อนไขและช่วงเวลาสำหรับการทำงานล่วงเวลา"}
             </p>
           </div>
         </div>
-        <Button onClick={() => handleOpenModal()}>
+        <Button
+          onClick={() =>
+            activeTab === "shift" ? handleOpenModal() : handleOpenOTModal()
+          }
+        >
           <PlusIcon className="w-4 h-4 mr-2" />
-          สร้างกะงานใหม่
+          {activeTab === "shift" ? "สร้างกะงานใหม่" : "สร้างรายการ OT"}
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {renderShifts}
+      <div className="flex gap-4 border-b border-gray-200">
+        <button
+          className={`pb-2 px-1 transition-colors ${
+            activeTab === "shift"
+              ? "border-b-2 border-primary text-primary font-medium"
+              : "text-text-sub hover:text-text-main"
+          }`}
+          onClick={() => setActiveTab("shift")}
+        >
+          จัดการกะงาน
+        </button>
+        <button
+          className={`pb-2 px-1 transition-colors ${
+            activeTab === "overtime"
+              ? "border-b-2 border-primary text-primary font-medium"
+              : "text-text-sub hover:text-text-main"
+          }`}
+          onClick={() => setActiveTab("overtime")}
+        >
+          จัดการการทำงานล่วงเวลา
+        </button>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {renderContent}
+      </div>
+
+      {/* Shift Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -371,272 +494,44 @@ export function ShiftPage() {
           </>
         }
       >
-        <div className="space-y-4">
-          <div>
-            <Label>ชื่อกะงาน</Label>
-            <Input
-              placeholder="เช่น กะเช้า, กะบ่าย"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>เวลาเข้างาน</Label>
-              <Input
-                type="time"
-                value={formData.start_time}
-                onChange={(e) =>
-                  setFormData({ ...formData, start_time: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>เวลาออกงาน</Label>
-              <Input
-                type="time"
-                value={formData.end_time}
-                onChange={(e) =>
-                  setFormData({ ...formData, end_time: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <div className="flex justify-between items-center">
-            <Label>สถานะกะงาน</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-text-sub">
-                {formData.is_active ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-              </span>
-              <Switch
-                checked={formData.is_active}
-                onChange={(checked) =>
-                  setFormData({ ...formData, is_active: checked })
-                }
-              />
-            </div>
-          </div>
+        <ShiftForm
+          formData={formData}
+          setFormData={setFormData}
+          overtimes={overtimes}
+          daysOfWeek={daysOfWeek}
+          toggleDay={toggleDay}
+          departments={departments}
+          filteredEmployees={filteredEmployees}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          handleSelectAll={handleSelectAll}
+          handleClearAll={handleClearAll}
+          toggleEmployeeId={toggleEmployeeId}
+        />
+      </Modal>
 
-          <div className="flex justify-between items-center">
-            <Label>อนุญาตให้ทำ OT</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-text-sub">
-                {formData.ot_enabled ? "ใช่" : "ไม่ใช่"}
-              </span>
-              <Switch
-                checked={formData.ot_enabled}
-                onChange={(checked) =>
-                  setFormData({ ...formData, ot_enabled: checked })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <Label>มีเวลาพัก</Label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-text-sub">
-                {formData.break_enabled ? "มี" : "ไม่มี"}
-              </span>
-              <Switch
-                checked={formData.break_enabled}
-                onChange={(checked) =>
-                  setFormData({ ...formData, break_enabled: checked })
-                }
-              />
-            </div>
-          </div>
-
-          {formData.break_enabled && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>เวลาเริ่มพัก</Label>
-                <Input
-                  type="time"
-                  value={formData.break_start_time}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      break_start_time: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>เวลาสิ้นสุดพัก</Label>
-                <Input
-                  type="time"
-                  value={formData.break_end_time}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      break_end_time: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          )}
-
-          <div>
-            <Label>วันทำงาน</Label>
-            <div className="flex gap-2 mt-2">
-              {daysOfWeek.map((day) => (
-                <button
-                  key={day.id}
-                  type="button"
-                  onClick={() => toggleDay(day.id)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
-                    formData.work_days.includes(day.id)
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-white border border-gray-200 text-text-sub hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {day.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label>มอบหมายให้</Label>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="assign_type"
-                    value="individual"
-                    checked={formData.assign_type === "individual"}
-                    onChange={() =>
-                      setFormData({ ...formData, assign_type: "individual" })
-                    }
-                    className="text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm text-text-main">รายบุคคล</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="assign_type"
-                    value="department"
-                    checked={formData.assign_type === "department"}
-                    onChange={() =>
-                      setFormData({ ...formData, assign_type: "department" })
-                    }
-                    className="text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm text-text-main">รายแผนก</span>
-                </label>
-              </div>
-            </div>
-
-            {formData.assign_type === "department" ? (
-              <div className="space-y-2">
-                <div className="border border-gray-200 rounded-md p-2 max-h-60 overflow-y-auto bg-gray-50">
-                  {departments.map((dept) => (
-                    <div
-                      key={dept.id}
-                      className="flex items-center gap-3 p-2 hover:bg-white rounded-md transition-colors"
-                    >
-                      <input
-                        type="checkbox"
-                        id={`dept-${dept.id}`}
-                        checked={formData.departmentId.includes(dept.id)}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          const newDeptIds = checked
-                            ? [...formData.departmentId, dept.id]
-                            : formData.departmentId.filter(
-                                (id) => id !== dept.id
-                              );
-                          setFormData({
-                            ...formData,
-                            departmentId: newDeptIds,
-                          });
-                        }}
-                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                      />
-                      <label
-                        htmlFor={`dept-${dept.id}`}
-                        className="flex-1 text-sm text-text-main cursor-pointer select-none"
-                      >
-                        {dept.departmentName}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-text-sub">
-                    เลือกแล้ว {formData.employeeId.length} คน
-                  </span>
-                </div>
-                <Input
-                  placeholder="ค้นหาพนักงาน..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="text-sm"
-                />
-
-                <div className="flex gap-2 justify-end">
-                  <button
-                    type="button"
-                    onClick={handleSelectAll}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    เลือกทั้งหมด
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleClearAll}
-                    className="text-xs text-status-late hover:underline"
-                  >
-                    ล้างการเลือก
-                  </button>
-                </div>
-
-                <div className="border border-gray-200 rounded-md p-2 max-h-60 overflow-y-auto bg-gray-50">
-                  {filteredEmployees.length > 0 ? (
-                    filteredEmployees.map((emp) => (
-                      <div
-                        key={emp.id}
-                        className="flex items-center gap-3 p-2 hover:bg-white rounded-md transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          id={`emp-${emp.id}`}
-                          checked={formData.employeeId.includes(emp.id)}
-                          onChange={(e) =>
-                            toggleEmployeeId(emp.id, e.target.checked)
-                          }
-                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                        />
-                        <label
-                          htmlFor={`emp-${emp.id}`}
-                          className="flex-1 text-sm text-text-main cursor-pointer select-none flex items-center gap-2"
-                        >
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                            {emp.name ? emp.name.charAt(0).toUpperCase() : "?"}
-                          </div>
-                          <span>{emp.name || "ไม่ระบุชื่อ"}</span>
-                        </label>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-text-sub text-center py-4">
-                      ไม่พบพนักงานที่ค้นหา
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* OT Modal */}
+      <Modal
+        isOpen={isOTModalOpen}
+        onClose={handleCloseOTModal}
+        title={editingOT ? "แก้ไขรายการ OT" : "สร้างรายการ OT ใหม่"}
+        footer={
+          <>
+            <Button variant="ghost" onClick={handleCloseOTModal}>
+              ยกเลิก
+            </Button>
+            <Button onClick={handleOTSubmit}>บันทึก</Button>
+          </>
+        }
+      >
+        <OTForm
+          otFormData={otFormData}
+          setOtFormData={setOtFormData}
+          departments={departments}
+          filteredEmployees={filteredEmployees}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
       </Modal>
 
       <Modal
@@ -662,6 +557,34 @@ export function ShiftPage() {
           <span className="font-bold">
             {deletingShift?.shift_name || deletingShift?.name}
           </span>
+          <span>? การกระทำนี้ไม่สามารถย้อนกลับได้</span>
+        </p>
+      </Modal>
+
+      <Modal
+        isOpen={isOTDeleteModalOpen}
+        onClose={() => setIsOTDeleteModalOpen(false)}
+        title="ยืนยันการลบรายการ OT"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setIsOTDeleteModalOpen(false)}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              className="bg-status-late hover:bg-red-600 text-white"
+              onClick={confirmOTDelete}
+            >
+              ลบรายการ OT
+            </Button>
+          </>
+        }
+      >
+        <p className="text-text-main">
+          คุณแน่ใจหรือไม่ว่าต้องการลบรายการ OT{" "}
+          <span className="font-bold">{deletingOT?.name}</span>
           <span>? การกระทำนี้ไม่สามารถย้อนกลับได้</span>
         </p>
       </Modal>
