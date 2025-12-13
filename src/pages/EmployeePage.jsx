@@ -6,7 +6,10 @@ import {
   resignEmployee,
   deleteEmployee,
 } from "../store/slices/employeeSlice";
-import { fetchDepartments } from "../store/slices/companySlice";
+import {
+  fetchDepartments,
+  fetchCompanyInfo,
+} from "../store/slices/companySlice";
 import { Button } from "../components/atoms/Button";
 import { Input } from "../components/atoms/Input";
 import { Label } from "../components/atoms/Label";
@@ -23,7 +26,7 @@ import { formatDate } from "../utils/dateUtils";
 export function EmployeePage() {
   const dispatch = useDispatch();
   const { employees, isLoading } = useSelector((state) => state.employee);
-  const { departments } = useSelector((state) => state.company);
+  const { departments, companyInfo } = useSelector((state) => state.company);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [editModal, setEditModal] = useState({ isOpen: false, employee: null });
@@ -38,18 +41,42 @@ export function EmployeePage() {
   const [formData, setFormData] = useState({});
   const [resignDate, setResignDate] = useState("");
 
+  // Local state for optimistic updates
+  const [localEmployees, setLocalEmployees] = useState([]);
+
   useEffect(() => {
     dispatch(fetchEmployees());
     dispatch(fetchDepartments());
+    dispatch(fetchCompanyInfo());
   }, [dispatch]);
 
+  // Sync local state with Redux state
+  useEffect(() => {
+    setLocalEmployees(employees);
+  }, [employees]);
+
+  // Memoize active departments for the dropdown
+  const activeDepartments = useMemo(() => {
+    return departments.filter((d) => d.is_active);
+  }, [departments]);
+
+  // Memoize department lookup for faster table rendering
+  const departmentLookup = useMemo(() => {
+    return departments.reduce((acc, dept) => {
+      acc[dept.id] = dept.departmentName;
+      return acc;
+    }, {});
+  }, [departments]);
+
   const filteredEmployees = useMemo(() => {
-    return employees.filter(
+    return localEmployees.filter(
       (emp) =>
         emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.department?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        (departmentLookup[emp.departmentId] || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
     );
-  }, [employees, searchQuery]);
+  }, [localEmployees, searchQuery, departmentLookup]);
 
   const handleEditClick = (employee) => {
     setFormData({
@@ -73,67 +100,96 @@ export function EmployeePage() {
   };
 
   const handleEditSubmit = async () => {
-    try {
-      const dataToSubmit = {
-        ...formData,
-        start_date: formData.start_date === "" ? null : formData.start_date,
-        lineUserId: formData.lineUserId === "" ? null : formData.lineUserId,
-        dayOff: formData.dayOff === "" ? null : formData.dayOff,
-      };
+    const { id } = editModal.employee;
+    const dataToSubmit = {
+      ...formData,
+      start_date: formData.start_date === "" ? null : formData.start_date,
+      lineUserId: formData.lineUserId === "" ? null : formData.lineUserId,
+      dayOff: formData.dayOff === "" ? null : formData.dayOff,
+    };
 
+    // Optimistic Update
+    setLocalEmployees((prev) =>
+      prev.map((emp) => (emp.id === id ? { ...emp, ...dataToSubmit } : emp))
+    );
+    setEditModal({ isOpen: false, employee: null });
+
+    try {
       await dispatch(
         updateEmployee({
-          id: editModal.employee.id,
+          id,
           data: dataToSubmit,
         })
       ).unwrap();
-      setEditModal({ isOpen: false, employee: null });
     } catch (error) {
       console.error("Failed to update employee:", error);
+      setLocalEmployees(employees); // Revert on error
     }
   };
 
   const handleResignSubmit = async () => {
+    const { id } = resignModal.employee;
+
+    // Optimistic Update
+    setLocalEmployees((prev) =>
+      prev.map((emp) =>
+        emp.id === id ? { ...emp, resign_date: resignDate } : emp
+      )
+    );
+    setResignModal({ isOpen: false, employee: null });
+
     try {
       await dispatch(
         resignEmployee({
-          id: resignModal.employee.id,
+          id,
           resignDate: resignDate,
         })
       ).unwrap();
-      setResignModal({ isOpen: false, employee: null });
     } catch (error) {
       console.error("Failed to resign employee:", error);
+      setLocalEmployees(employees); // Revert on error
     }
   };
 
   const handleDeleteSubmit = async () => {
+    const { id } = deleteModal.employee;
+
+    // Optimistic Update
+    setLocalEmployees((prev) => prev.filter((emp) => emp.id !== id));
+    setDeleteModal({ isOpen: false, employee: null });
+
     try {
-      await dispatch(deleteEmployee(deleteModal.employee.id)).unwrap();
-      setDeleteModal({ isOpen: false, employee: null });
+      await dispatch(deleteEmployee(id)).unwrap();
     } catch (error) {
       console.error("Failed to delete employee:", error);
+      setLocalEmployees(employees); // Revert on error
     }
   };
 
-  const employeeRows = (() => {
-    if (isLoading) {
-      return (
-        <tr>
-          <td colSpan="5" className="px-6 py-8 text-center text-text-sub">
+  const employeeRows = useMemo(() => {
+    const colSpan = companyInfo?.hasDepartment === 1 ? 5 : 4;
+
+    // Only show loading if we have absolutely no data (initial load)
+    if (isLoading && localEmployees.length === 0) {
+      return [
+        <tr key="loading">
+          <td colSpan={colSpan} className="px-6 py-8 text-center text-text-sub">
             Loading...
           </td>
-        </tr>
-      );
+        </tr>,
+      ];
     }
     if (filteredEmployees.length === 0) {
-      return (
-        <tr>
-          <td colSpan="5" className="px-6 py-8 text-center text-text-muted">
+      return [
+        <tr key="empty">
+          <td
+            colSpan={colSpan}
+            className="px-6 py-8 text-center text-text-muted"
+          >
             ไม่พบข้อมูลพนักงาน
           </td>
-        </tr>
-      );
+        </tr>,
+      ];
     }
     return filteredEmployees.map((emp) => (
       <tr key={emp.id} className="hover:bg-gray-50">
@@ -146,15 +202,14 @@ export function EmployeePage() {
         <td className="px-6 py-4 text-text-sub font-mono text-sm">
           {emp.ID_or_Passport_Number}
         </td>
-        <td className="px-6 py-4">
-          <StatusBadge
-            status={
-              departments.find((d) => d.id === emp.departmentId)
-                ?.departmentName || "ไม่ระบุ"
-            }
-            type="neutral"
-          />
-        </td>
+        {companyInfo?.hasDepartment === 1 && (
+          <td className="px-6 py-4">
+            <StatusBadge
+              status={departmentLookup[emp.departmentId] || "ไม่ระบุ"}
+              type="neutral"
+            />
+          </td>
+        )}
         <td className="px-6 py-4">
           {emp.resign_date ? (
             <StatusBadge
@@ -195,7 +250,13 @@ export function EmployeePage() {
         </td>
       </tr>
     ));
-  })();
+  }, [
+    isLoading,
+    localEmployees.length,
+    filteredEmployees,
+    departmentLookup,
+    companyInfo,
+  ]);
 
   return (
     <div className="space-y-6">
@@ -233,7 +294,9 @@ export function EmployeePage() {
               <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-text-sub font-semibold">
                 <th className="px-6 py-4">ชื่อ-นามสกุล</th>
                 <th className="px-6 py-4">รหัสบัตรประชาชน/พาสปอร์ต</th>
-                <th className="px-6 py-4">แผนก</th>
+                {companyInfo?.hasDepartment === 1 && (
+                  <th className="px-6 py-4">แผนก</th>
+                )}
                 <th className="px-6 py-4">สถานะ</th>
                 <th className="px-6 py-4 text-right">จัดการ</th>
               </tr>
@@ -282,26 +345,28 @@ export function EmployeePage() {
               }
             />
           </div>
-          <div>
-            <Label>แผนก</Label>
-            <select
-              className="w-full px-3 py-2 bg-white border border-border-base rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
-              value={formData.departmentId || ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  departmentId: Number.parseInt(e.target.value),
-                })
-              }
-            >
-              <option value="">เลือกแผนก</option>
-              {departments.map((dept) => (
-                <option key={dept.id} value={dept.id}>
-                  {dept.departmentName}
-                </option>
-              ))}
-            </select>
-          </div>
+          {companyInfo?.hasDepartment === 1 && (
+            <div>
+              <Label>แผนก</Label>
+              <select
+                className="w-full px-3 py-2 bg-white border border-border-base rounded-md focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                value={formData.departmentId || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    departmentId: Number.parseInt(e.target.value),
+                  })
+                }
+              >
+                <option value="">เลือกแผนก</option>
+                {activeDepartments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.departmentName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <Label>Line User ID</Label>
             <Input
