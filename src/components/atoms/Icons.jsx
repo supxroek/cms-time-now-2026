@@ -272,6 +272,30 @@ export const PlusIcon = ({ className = "w-5 h-5" }) => (
   </svg>
 );
 
+export const FileTextIcon = ({ className = "w-6 h-6" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    {/* document outline */}
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M7 3h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"
+    />
+    {/* text lines */}
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 9h6M9 13h6M9 17h4"
+    />
+  </svg>
+);
+
 /* shared propTypes for all icon components */
 const iconPropTypes = {
   className: PropTypes.string,
@@ -294,3 +318,4 @@ SyncIcon.propTypes = iconPropTypes;
 EditIcon.propTypes = iconPropTypes;
 DeleteIcon.propTypes = iconPropTypes;
 PlusIcon.propTypes = iconPropTypes;
+FileTextIcon.propTypes = iconPropTypes;

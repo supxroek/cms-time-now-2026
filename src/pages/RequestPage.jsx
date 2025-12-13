@@ -1,73 +1,256 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { StatsCard } from "../components/molecules/StatsCard";
 import { StatusBadge } from "../components/atoms/StatusBadge";
-import { UserCheckIcon, UserXIcon, ClockIcon } from "../components/atoms/Icons";
+import {
+  UserCheckIcon,
+  UserXIcon,
+  ClockIcon,
+  FileTextIcon,
+} from "../components/atoms/Icons";
+import {
+  fetchPendingRequests,
+  fetchRequestHistory,
+  fetchRequestStats,
+  approveRequest,
+  rejectRequest,
+} from "../store/slices/requestSlice";
+import { Modal } from "../components/molecules/Modal";
+import { Button } from "../components/atoms/Button";
+import { Input } from "../components/atoms/Input";
+
+const REQUEST_TYPES = {
+  work_in: "เข้างาน",
+  break_in: "พักงาน",
+  ot_in: "ทำงานล่วงเวลาเข้า",
+  work_out: "เลิกงาน",
+  break_out: "พักงานออก",
+  ot_out: "ทำงานล่วงเวลาออก",
+};
+
+const initialHistoryFilters = {
+  page: 1,
+  limit: 10,
+  search: "",
+  type: "all",
+  status: "all",
+  startDate: "",
+  endDate: "",
+};
 
 export function RequestPage() {
-  // Mock Data
-  const [requests, setRequests] = useState([
-    {
-      id: 1,
-      employee: "Somchai Jai-dee",
-      type: "ลาหยุด",
-      date: "2025-12-15",
-      time: "09:00 - 18:00",
-      reason: "Personal Leave",
-      status: "รอดำเนินการ",
-    },
-    {
-      id: 2,
-      employee: "Somsri Rak-ngan",
-      type: "ล่วงเวลา",
-      date: "2025-12-12",
-      time: "18:00 - 20:00",
-      reason: "Urgent Project",
-      status: "อนุมัติ",
-    },
-    {
-      id: 3,
-      employee: "Mana Dee-mak",
-      type: "เปลี่ยนกะ",
-      date: "2025-12-20",
-      time: "08:00 - 17:00",
-      reason: "Doctor Appointment",
-      status: "ปฏิเสธ",
-    },
-    {
-      id: 4,
-      employee: "Manee Me-chai",
-      type: "ลาหยุด",
-      date: "2025-12-30",
-      time: "09:00 - 18:00",
-      reason: "New Year Holiday",
-      status: "รอดำเนินการ",
-    },
-  ]);
-
+  const dispatch = useDispatch();
+  const {
+    items: requests,
+    history,
+    stats,
+    loading,
+    historyLoading,
+    actionLoading,
+  } = useSelector((state) => state.requests);
+  const [activeTab, setActiveTab] = useState("pending"); // 'pending' | 'history'
   const [filterType, setFilterType] = useState("ทุกประเภท");
-  const [filterStatus, setFilterStatus] = useState("ทุกสถานะ");
+  const [selectedEvidence, setSelectedEvidence] = useState(null);
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    type: null, // 'approve' | 'reject'
+    id: null,
+  });
+
+  // History Filters
+  const [historyFilters, setHistoryFilters] = useState(initialHistoryFilters);
+
+  const resetFilters = () => {
+    setHistoryFilters(initialHistoryFilters);
+    setFilterType("ทุกประเภท");
+  };
+
+  useEffect(() => {
+    dispatch(fetchRequestStats());
+    if (activeTab === "pending") {
+      dispatch(fetchPendingRequests());
+    } else {
+      dispatch(fetchRequestHistory(historyFilters));
+    }
+  }, [dispatch, activeTab, historyFilters]);
 
   const filteredRequests = requests.filter((req) => {
-    const matchType = filterType === "ทุกประเภท" || req.type === filterType;
-    const matchStatus =
-      filterStatus === "ทุกสถานะ" || req.status === filterStatus;
-    return matchType && matchStatus;
+    const typeLabel = REQUEST_TYPES[req.timestamp_type] || req.timestamp_type;
+    const matchType = filterType === "ทุกประเภท" || typeLabel === filterType;
+    return matchType;
   });
 
   const handleApprove = (id) => {
-    setRequests(
-      requests.map((req) =>
-        req.id === id ? { ...req, status: "Approved" } : req
-      )
-    );
+    setConfirmModal({ isOpen: true, type: "approve", id });
   };
 
   const handleReject = (id) => {
-    setRequests(
-      requests.map((req) =>
-        req.id === id ? { ...req, status: "Rejected" } : req
-      )
-    );
+    setConfirmModal({ isOpen: true, type: "reject", id });
+  };
+
+  const executeConfirmAction = async () => {
+    if (confirmModal.type === "approve") {
+      dispatch(approveRequest(confirmModal.id));
+    } else if (confirmModal.type === "reject") {
+      dispatch(rejectRequest(confirmModal.id));
+    }
+    setConfirmModal({ isOpen: false, type: null, id: null });
+    // Refresh pending list
+    dispatch(fetchPendingRequests());
+    dispatch(fetchRequestStats());
+  };
+
+  const handleHistoryFilterChange = (key, value) => {
+    setHistoryFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const renderTableBody = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan="9" className="px-6 py-4 text-center text-text-sub">
+            กำลังโหลดข้อมูล...
+          </td>
+        </tr>
+      );
+    }
+
+    if (filteredRequests.length === 0) {
+      return (
+        <tr>
+          <td colSpan="9" className="px-6 py-4 text-center text-text-sub">
+            ไม่พบคำขอ
+          </td>
+        </tr>
+      );
+    }
+
+    return filteredRequests.map((req) => (
+      <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+        <td className="px-6 py-4 font-medium text-text-main">
+          {req.employee_name ||
+            req.employee?.first_name + " " + req.employee?.last_name ||
+            "Unknown"}
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {REQUEST_TYPES[req.timestamp_type] || req.timestamp_type}
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {new Date(req.forget_date).toLocaleDateString("th-TH")}
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {req.forget_time?.slice(0, 5)}
+        </td>
+        <td
+          className="px-6 py-4 text-text-sub max-w-2xs truncate"
+          title={req.reason}
+        >
+          {req.reason}
+        </td>
+        <td className="px-6 py-4">
+          {req.evidence ? (
+            <button
+              onClick={() => setSelectedEvidence(req.evidence)}
+              className="text-primary hover:underline flex items-center gap-1"
+            >
+              <FileTextIcon className="w-4 h-4" /> ดูหลักฐาน
+            </button>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )}
+        </td>
+        <td className="px-6 py-4">
+          <StatusBadge status={req.status} />
+        </td>
+        <td className="px-6 py-4 text-right">
+          {req.status === "pending" && (
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => handleApprove(req.request_id)}
+                disabled={actionLoading === req.request_id}
+                className="p-1 text-success hover:bg-success/10 rounded transition-colors disabled:opacity-50"
+                title="อนุมัติ"
+              >
+                <UserCheckIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleReject(req.request_id)}
+                disabled={actionLoading === req.request_id}
+                className="p-1 text-danger hover:bg-danger/10 rounded transition-colors disabled:opacity-50"
+                title="ปฏิเสธ"
+              >
+                <UserXIcon className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </td>
+      </tr>
+    ));
+  };
+
+  const renderHistoryTableBody = () => {
+    if (historyLoading) {
+      return (
+        <tr>
+          <td colSpan="9" className="px-6 py-4 text-center text-text-sub">
+            กำลังโหลดข้อมูล...
+          </td>
+        </tr>
+      );
+    }
+
+    if (history.items.length === 0) {
+      return (
+        <tr>
+          <td colSpan="9" className="px-6 py-4 text-center text-text-sub">
+            ไม่พบประวัติคำขอ
+          </td>
+        </tr>
+      );
+    }
+
+    return history.items.map((req) => (
+      <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+        <td className="px-6 py-4 font-medium text-text-main">
+          {req.employee_name || "Unknown"}
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {REQUEST_TYPES[req.timestamp_type] || req.timestamp_type}
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {new Date(req.forget_date).toLocaleDateString("th-TH")}
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {req.forget_time?.slice(0, 5)}
+        </td>
+        <td
+          className="px-6 py-4 text-text-sub max-w-xs truncate"
+          title={req.reason}
+        >
+          {req.reason}
+        </td>
+        <td className="px-6 py-4">
+          {req.evidence ? (
+            <button
+              onClick={() => setSelectedEvidence(req.evidence)}
+              className="text-primary hover:underline flex items-center gap-1"
+            >
+              <FileTextIcon className="w-4 h-4" /> ดูหลักฐาน
+            </button>
+          ) : (
+            <span className="text-gray-400">-</span>
+          )}
+        </td>
+        <td className="px-6 py-4">
+          <StatusBadge status={req.status} />
+        </td>
+        <td className="px-6 py-4 text-text-sub">
+          {req.approved_at
+            ? new Date(req.approved_at).toLocaleDateString("th-TH")
+            : "-"}
+        </td>
+      </tr>
+    ));
   };
 
   return (
@@ -77,115 +260,286 @@ export function RequestPage() {
           <h1 className="text-2xl font-bold text-text-main">การจัดการคำขอ</h1>
           <p className="text-text-sub mt-1">จัดการคำขอของพนักงาน</p>
         </div>
-        {/* <Button variant="primary" icon={<RequestsIcon className="w-5 h-5" />}>
-          คำขอใหม่
-        </Button> */}
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatsCard
-          title="คำขอที่รอดำเนินการ"
-          value={requests.filter((r) => r.status === "รอดำเนินการ").length}
+          title="คำขอทั้งหมด"
+          value={stats.total}
+          icon={<FileTextIcon className="w-6 h-6" />}
+          color="primary"
+        />
+        <StatsCard
+          title="รอดำเนินการ"
+          value={stats.pending}
           icon={<ClockIcon className="w-6 h-6" />}
           color="warning"
         />
         <StatsCard
-          title="ที่อนุมัติ"
-          value={requests.filter((r) => r.status === "อนุมัติ").length}
+          title="อนุมัติแล้ว"
+          value={stats.approved}
           icon={<UserCheckIcon className="w-6 h-6" />}
           color="success"
         />
         <StatsCard
-          title="ที่ถูกปฏิเสธ"
-          value={requests.filter((r) => r.status === "ปฏิเสธ").length}
+          title="ปฏิเสธแล้ว"
+          value={stats.rejected}
           icon={<UserXIcon className="w-6 h-6" />}
           color="danger"
         />
       </div>
 
-      {/* Request List */}
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => {
+              setActiveTab("pending");
+              resetFilters();
+            }}
+            className={`${
+              activeTab === "pending"
+                ? "border-primary text-primary"
+                : "border-transparent text-text-sub hover:text-text-main hover:border-gray-300"
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            คำขอที่รอดำเนินการ
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab("history");
+              resetFilters();
+            }}
+            className={`${
+              activeTab === "history"
+                ? "border-primary text-primary"
+                : "border-transparent text-text-sub hover:text-text-main hover:border-gray-300"
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            ประวัติคำขอ
+          </button>
+        </nav>
+      </div>
+
+      {/* Content */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-          <h2 className="font-semibold text-text-main">คำขอล่าสุด</h2>
-          <div className="flex gap-2">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
-            >
-              <option>ทุกประเภท</option>
-              <option>ลาหยุด</option>
-              <option>ล่วงเวลา</option>
-              <option>เปลี่ยนกะ</option>
-            </select>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
-            >
-              <option>ทุกสถานะ</option>
-              <option>รอดำเนินการ</option>
-              <option>อนุมัติ</option>
-              <option>ปฏิเสธ</option>
-            </select>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-3">พนักงาน</th>
-                <th className="px-6 py-3">ประเภท</th>
-                <th className="px-6 py-3">วันที่</th>
-                <th className="px-6 py-3">เวลา</th>
-                <th className="px-6 py-3">เหตุผล</th>
-                <th className="px-6 py-3">สถานะ</th>
-                <th className="px-6 py-3 text-right">การดำเนินการ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {filteredRequests.map((req) => (
-                <tr key={req.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-text-main">
-                    {req.employee}
-                  </td>
-                  <td className="px-6 py-4 text-text-sub">{req.type}</td>
-                  <td className="px-6 py-4 text-text-sub">{req.date}</td>
-                  <td className="px-6 py-4 text-text-sub">{req.time}</td>
-                  <td className="px-6 py-4 text-text-sub">{req.reason}</td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={req.status} />
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    {req.status === "รอดำเนินการ" && (
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => handleApprove(req.id)}
-                          className="p-1 text-success hover:bg-success/10 rounded transition-colors"
-                          title="อนุมัติ"
-                        >
-                          <UserCheckIcon className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => handleReject(req.id)}
-                          className="p-1 text-danger hover:bg-danger/10 rounded transition-colors"
-                          title="ปฏิเสธ"
-                        >
-                          <UserXIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filteredRequests.length === 0 && (
-          <div className="p-8 text-center text-text-muted">ไม่พบคำขอ</div>
+        {activeTab === "pending" ? (
+          <>
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+              <h2 className="font-semibold text-text-main">คำขอล่าสุด</h2>
+              <div className="flex gap-2">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
+                >
+                  <option>ทุกประเภท</option>
+                  {Object.values(REQUEST_TYPES).map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-3">พนักงาน</th>
+                    <th className="px-6 py-3">ประเภท</th>
+                    <th className="px-6 py-3">วันที่ขอแก้ไข</th>
+                    <th className="px-6 py-3">เวลาขอแก้ไข</th>
+                    <th className="px-6 py-3">เหตุผล</th>
+                    <th className="px-6 py-3">หลักฐาน</th>
+                    <th className="px-6 py-3">สถานะ</th>
+                    <th className="px-6 py-3 text-right">การดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {renderTableBody()}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="p-4 border-b border-gray-100 space-y-4">
+              <div className="flex flex-wrap gap-4">
+                <Input
+                  placeholder="ค้นหาชื่อ หรือ รหัสคำขอ..."
+                  value={historyFilters.search}
+                  onChange={(e) =>
+                    handleHistoryFilterChange("search", e.target.value)
+                  }
+                  className="w-64"
+                />
+                <select
+                  value={historyFilters.type}
+                  onChange={(e) =>
+                    handleHistoryFilterChange("type", e.target.value)
+                  }
+                  className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
+                >
+                  <option value="all">ทุกประเภท</option>
+                  {Object.entries(REQUEST_TYPES).map(([key, value]) => (
+                    <option key={key} value={key}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={historyFilters.status}
+                  onChange={(e) =>
+                    handleHistoryFilterChange("status", e.target.value)
+                  }
+                  className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
+                >
+                  <option value="all">ทุกสถานะ</option>
+                  <option value="approved">อนุมัติ</option>
+                  <option value="rejected">ปฏิเสธ</option>
+                </select>
+                <input
+                  type="date"
+                  value={historyFilters.startDate}
+                  onChange={(e) =>
+                    handleHistoryFilterChange("startDate", e.target.value)
+                  }
+                  className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
+                />
+                <span className="self-center text-gray-400">-</span>
+                <input
+                  type="date"
+                  value={historyFilters.endDate}
+                  onChange={(e) =>
+                    handleHistoryFilterChange("endDate", e.target.value)
+                  }
+                  className="text-sm border-gray-200 rounded-md text-text-sub focus:ring-primary focus:border-primary"
+                />
+                <Button variant="ghost" onClick={resetFilters}>
+                  รีเซ็ตตัวกรอง
+                </Button>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-3">พนักงาน</th>
+                    <th className="px-6 py-3">ประเภท</th>
+                    <th className="px-6 py-3">วันที่ขอแก้ไข</th>
+                    <th className="px-6 py-3">เวลาขอแก้ไข</th>
+                    <th className="px-6 py-3">เหตุผล</th>
+                    <th className="px-6 py-3">หลักฐาน</th>
+                    <th className="px-6 py-3">สถานะ</th>
+                    <th className="px-6 py-3">วันที่ดำเนินการ</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {renderHistoryTableBody()}
+                </tbody>
+              </table>
+            </div>
+            {/* Pagination */}
+            <div className="p-4 border-t border-gray-100 flex justify-between items-center">
+              <div className="text-sm text-text-sub">
+                แสดง {history.items.length} จาก {history.total} รายการ
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  disabled={history.page === 1}
+                  onClick={() =>
+                    setHistoryFilters((prev) => ({
+                      ...prev,
+                      page: prev.page - 1,
+                    }))
+                  }
+                >
+                  ก่อนหน้า
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={history.page >= history.totalPages}
+                  onClick={() =>
+                    setHistoryFilters((prev) => ({
+                      ...prev,
+                      page: prev.page + 1,
+                    }))
+                  }
+                >
+                  ถัดไป
+                </Button>
+              </div>
+            </div>
+          </>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: null, id: null })}
+        title={
+          confirmModal.type === "approve"
+            ? "ยืนยันการอนุมัติ"
+            : "ยืนยันการปฏิเสธ"
+        }
+      >
+        <div className="p-6">
+          <p className="text-text-main mb-6">
+            {confirmModal.type === "approve"
+              ? "คุณต้องการอนุมัติคำขอนี้ใช่หรือไม่?"
+              : "คุณต้องการปฏิเสธคำขอนี้ใช่หรือไม่?"}
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="ghost"
+              onClick={() =>
+                setConfirmModal({ isOpen: false, type: null, id: null })
+              }
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              variant={confirmModal.type === "approve" ? "primary" : "danger"}
+              onClick={executeConfirmAction}
+            >
+              ยืนยัน
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Evidence Modal */}
+      <Modal
+        isOpen={!!selectedEvidence}
+        onClose={() => setSelectedEvidence(null)}
+        title="หลักฐานประกอบคำขอ"
+      >
+        <div className="pb-6 flex justify-center items-center">
+          {selectedEvidence &&
+          (selectedEvidence.startsWith("data:image") ||
+            selectedEvidence.match(/\.(jpeg|jpg|gif|png)$/)) ? (
+            <img
+              src={selectedEvidence}
+              alt="Evidence"
+              className="max-w-full h-auto rounded"
+            />
+          ) : (
+            <div className="text-center p-4 bg-gray-50 rounded">
+              <p className="mb-2">ไม่สามารถแสดงตัวอย่างไฟล์ได้</p>
+              <a
+                href={selectedEvidence}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                เปิดไฟล์ในแท็บใหม่
+              </a>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

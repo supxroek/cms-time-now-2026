@@ -465,7 +465,7 @@ export function ShiftPage() {
 
       <div className="flex gap-4 border-b border-gray-200">
         <button
-          className={`pb-2 px-1 transition-colors ${
+          className={`p-2 px-1 transition-colors ${
             activeTab === "shift"
               ? "border-b-2 border-primary text-primary font-medium"
               : "text-text-sub hover:text-text-main"

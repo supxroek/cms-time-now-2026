@@ -29,6 +29,10 @@ export const API_ENDPOINTS = {
   },
   REQUESTS: {
     PENDING: "/requests/pending",
+    HISTORY: "/requests/history",
+    STATS: "/requests/stats",
+    APPROVE: (id) => `/requests/${id}/approve`,
+    REJECT: (id) => `/requests/${id}/reject`,
   },
   SHIFTS: {
     BASE: "/shifts",
