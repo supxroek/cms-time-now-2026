@@ -21,11 +21,11 @@ import { Input } from "../components/atoms/Input";
 
 const REQUEST_TYPES = {
   work_in: "เข้างาน",
-  break_in: "พักงาน",
-  ot_in: "ทำงานล่วงเวลาเข้า",
+  break_in: "เริ่มพัก",
+  break_out: "พักเสร็จ",
   work_out: "เลิกงาน",
-  break_out: "พักงานออก",
-  ot_out: "ทำงานล่วงเวลาออก",
+  ot_in: "เข้างานล่วงเวลา",
+  ot_out: "ออกงานล่วงเวลา",
 };
 
 const initialHistoryFilters = {
@@ -151,7 +151,7 @@ export function RequestPage() {
           {req.evidence ? (
             <button
               onClick={() => setSelectedEvidence(req.evidence)}
-              className="text-primary hover:underline flex items-center gap-1"
+              className="text-primary hover:underline hover:cursor-pointer flex items-center gap-1"
             >
               <FileTextIcon className="w-4 h-4" /> ดูหลักฐาน
             </button>
@@ -168,7 +168,7 @@ export function RequestPage() {
               <button
                 onClick={() => handleApprove(req.request_id)}
                 disabled={actionLoading === req.request_id}
-                className="p-1 text-success hover:bg-success/10 rounded transition-colors disabled:opacity-50"
+                className="p-1 text-success hover:bg-success/10 hover:cursor-pointer rounded transition-colors disabled:opacity-50"
                 title="อนุมัติ"
               >
                 <UserCheckIcon className="w-5 h-5" />
@@ -176,7 +176,7 @@ export function RequestPage() {
               <button
                 onClick={() => handleReject(req.request_id)}
                 disabled={actionLoading === req.request_id}
-                className="p-1 text-danger hover:bg-danger/10 rounded transition-colors disabled:opacity-50"
+                className="p-1 text-danger hover:bg-danger/10 hover:cursor-pointer rounded transition-colors disabled:opacity-50"
                 title="ปฏิเสธ"
               >
                 <UserXIcon className="w-5 h-5" />

@@ -69,13 +69,14 @@ export function EmployeePage() {
   }, [departments]);
 
   const filteredEmployees = useMemo(() => {
-    return localEmployees.filter(
-      (emp) =>
-        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (departmentLookup[emp.departmentId] || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase())
-    );
+    return localEmployees.filter((emp) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        (emp.name || "").toLowerCase().includes(q) ||
+        (emp.ID_or_Passport_Number || "").toLowerCase().includes(q) ||
+        (departmentLookup[emp.departmentId] || "").toLowerCase().includes(q)
+      );
+    });
   }, [localEmployees, searchQuery, departmentLookup]);
 
   const handleEditClick = (employee) => {
@@ -278,7 +279,7 @@ export function EmployeePage() {
         <div className="p-6 border-b border-gray-200 flex justify-between items-center">
           <div className="w-full max-w-md">
             <Input
-              placeholder="ค้นหาชื่อ หรือ แผนก..."
+              placeholder="ค้นหาชื่อ แผนก หรือบัตรประจำตัว..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

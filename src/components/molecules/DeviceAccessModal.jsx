@@ -13,6 +13,7 @@ export function DeviceAccessModal({ isOpen, onClose, device, onSave }) {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterType, setFilterType] = useState("all"); // all, selected, unselected
+  const { departments } = useSelector((state) => state.company);
 
   useEffect(() => {
     if (device?.employeeIds) {
@@ -22,13 +23,25 @@ export function DeviceAccessModal({ isOpen, onClose, device, onSave }) {
     }
     setSearchQuery("");
     setFilterType("all");
-  }, [device]);
+  }, [device, employees, departments]);
+
+  // Memoize department lookup for faster table rendering
+  const departmentLookup = useMemo(() => {
+    return departments.reduce((acc, dept) => {
+      acc[dept.id] = dept.departmentName;
+      return acc;
+    }, {});
+  }, [departments]);
 
   const filteredEmployees = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return employees.filter((emp) => {
+      const deptName =
+        emp.department?.name || departmentLookup[emp.departmentId] || "";
+
       const matchesSearch =
-        emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        emp.department?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        emp.name.toLowerCase().includes(q) ||
+        deptName.toLowerCase().includes(q);
 
       if (!matchesSearch) return false;
 
@@ -37,7 +50,13 @@ export function DeviceAccessModal({ isOpen, onClose, device, onSave }) {
       if (filterType === "unselected") return !isSelected;
       return true;
     });
-  }, [employees, searchQuery, selectedEmployeeIds, filterType]);
+  }, [
+    departmentLookup,
+    employees,
+    searchQuery,
+    selectedEmployeeIds,
+    filterType,
+  ]);
 
   const handleToggleEmployee = (employeeId) => {
     setSelectedEmployeeIds((prev) => {
@@ -239,7 +258,7 @@ export function DeviceAccessModal({ isOpen, onClose, device, onSave }) {
                           {emp.name}
                         </div>
                         <div className="text-xs text-text-sub">
-                          {emp.department?.name || "ไม่ระบุแผนก"}
+                          {departmentLookup[emp.departmentId] || "ไม่ระบุแผนก"}
                         </div>
                       </div>
                     </div>
