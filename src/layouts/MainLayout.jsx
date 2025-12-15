@@ -7,7 +7,7 @@ import { isTokenExpired } from "../utils/authUtils";
 import {
   CompanyIcon,
   EmployeesIcon,
-  AttendanceIcon,
+  DashboardIcon,
   RequestsIcon,
   ReportsIcon,
   SignOutIcon,
@@ -19,7 +19,7 @@ import PropTypes from "prop-types";
 const MenuIcon = ({ name }) => {
   switch (name) {
     case "Dashboard":
-      return <AttendanceIcon />;
+      return <DashboardIcon />;
     case "Company":
       return <CompanyIcon />;
     case "Employees":
@@ -47,7 +47,7 @@ export function MainLayout() {
   }, [token, logout, location]);
 
   const menuItems = [
-    { name: "Dashboard", path: "/attendance" },
+    { name: "Dashboard", path: "/dashboard" },
     { name: "Company", path: "/company" },
     { name: "Employees", path: "/employees" },
     { name: "Shifts", path: "/shifts" },

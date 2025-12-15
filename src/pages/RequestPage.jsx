@@ -7,6 +7,7 @@ import {
   UserXIcon,
   ClockIcon,
   FileTextIcon,
+  RequestsIcon,
 } from "../components/atoms/Icons";
 import {
   fetchPendingRequests,
@@ -255,7 +256,10 @@ export function RequestPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-primary/10 rounded-lg text-primary">
+          <RequestsIcon className="w-6 h-6" />
+        </div>
         <div>
           <h1 className="text-2xl font-bold text-text-main">การจัดการคำขอ</h1>
           <p className="text-text-sub mt-1">จัดการคำขอของพนักงาน</p>

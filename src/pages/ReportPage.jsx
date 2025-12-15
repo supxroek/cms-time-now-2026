@@ -206,9 +206,14 @@ export function ReportPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-text-main">รายงาน</h1>
-          <p className="text-text-sub mt-1">ภาพรวมและการวิเคราะห์</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg text-primary">
+            <ReportsIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-text-main">รายงาน</h1>
+            <p className="text-text-sub mt-1">ภาพรวมและการวิเคราะห์</p>
+          </div>
         </div>
         <div className="flex gap-4 items-end">
           <div>
