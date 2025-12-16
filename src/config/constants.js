@@ -43,4 +43,11 @@ export const API_ENDPOINTS = {
     BASE: "/overtimes",
     BY_ID: (id) => `/overtimes/${id}`,
   },
+  DASHBOARD: {
+    BASE: "/dashboard",
+    STATS: "/dashboard/stats",
+    ATTENDANCE: "/dashboard/attendance",
+    ACTIVITIES: "/dashboard/activities",
+    EMPLOYEE_HISTORY: (id) => `/dashboard/employee/${id}/history`,
+  },
 };
