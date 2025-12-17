@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchReportData } from "../store/slices/reportSlice";
 import { StatsCard } from "../components/molecules/StatsCard";
 import { Input } from "../components/atoms/Input";
 import { Label } from "../components/atoms/Label";
@@ -143,10 +145,52 @@ PieChart.propTypes = {
 };
 
 export function ReportPage() {
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const dispatch = useDispatch();
+
+  // Redux state
+  const {
+    overviewStats,
+    hourSummary,
+    attendanceTrend: attendanceTrendData,
+    departmentDistribution: departmentDistributionData,
+    monthlySummary: monthlySummaryData,
+    individualSummary: individualSummaryData,
+    loading,
+    error,
+  } = useSelector((state) => state.report);
+
+  // ตั้งค่าเริ่มต้นเป็นเดือนปัจจุบัน
+  const now = new Date();
+  const defaultStartDate = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .split("T")[0];
+  const defaultEndDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .split("T")[0];
+
+  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [endDate, setEndDate] = useState(defaultEndDate);
   const [showStatsSettings, setShowStatsSettings] = useState(false);
   const [showHourSettings, setShowHourSettings] = useState(false);
+
+  // Fetch data on mount only
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    dispatch(
+      fetchReportData({
+        startDate: defaultStartDate,
+        endDate: defaultEndDate,
+        year: currentYear,
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
+
+  // Refetch when search button is clicked
+  const handleSearch = () => {
+    const currentYear = new Date().getFullYear();
+    dispatch(fetchReportData({ startDate, endDate, year: currentYear }));
+  };
 
   // Stats cards - ต้องเลือก 4 อันเสมอ (เก็บเป็น array ของ id ที่เลือก)
   const [selectedStatsIds, setSelectedStatsIds] = useState([
@@ -163,12 +207,12 @@ export function ReportPage() {
     "maxOT",
   ]);
 
-  // Available Stats Cards Configuration
+  // Available Stats Cards Configuration - ใช้ค่าจาก API
   const allStatsCards = [
     {
       id: "totalEmployees",
       title: "พนักงานทั้งหมด",
-      value: "124",
+      value: overviewStats?.totalEmployees?.toString() || "0",
       icon: "users",
       color: "primary",
       trend: "up",
@@ -177,7 +221,7 @@ export function ReportPage() {
     {
       id: "avgAttendance",
       title: "ค่าเฉลี่ยการเข้าทำงาน",
-      value: "98.2%",
+      value: `${overviewStats?.avgAttendanceRate || 0}%`,
       icon: "clock",
       color: "success",
       trend: "up",
@@ -186,7 +230,7 @@ export function ReportPage() {
     {
       id: "totalOvertime",
       title: "ชั่วโมงล่วงเวลาทั้งหมด",
-      value: "450h",
+      value: `${overviewStats?.totalOvertimeHours || 0}h`,
       icon: "calendar",
       color: "warning",
       trend: "down",
@@ -195,7 +239,7 @@ export function ReportPage() {
     {
       id: "avgLate",
       title: "ค่าเฉลี่ยการมาสาย",
-      value: "12.5%",
+      value: `${overviewStats?.avgLateRate || 0}%`,
       icon: "reports",
       color: "danger",
       trend: "down",
@@ -204,7 +248,7 @@ export function ReportPage() {
     {
       id: "totalAbsent",
       title: "จำนวนขาดงาน",
-      value: "8",
+      value: overviewStats?.absentCount?.toString() || "0",
       icon: "calendar",
       color: "danger",
       trend: "down",
@@ -213,7 +257,7 @@ export function ReportPage() {
     {
       id: "totalLeave",
       title: "จำนวนลางาน",
-      value: "15",
+      value: overviewStats?.leaveCount?.toString() || "0",
       icon: "calendar",
       color: "info",
       trend: "up",
@@ -222,7 +266,7 @@ export function ReportPage() {
     {
       id: "newEmployees",
       title: "พนักงานใหม่",
-      value: "5",
+      value: overviewStats?.newEmployees?.toString() || "0",
       icon: "users",
       color: "success",
       trend: "up",
@@ -231,7 +275,7 @@ export function ReportPage() {
     {
       id: "resignedEmployees",
       title: "พนักงานลาออก",
-      value: "2",
+      value: overviewStats?.resignedEmployees?.toString() || "0",
       icon: "users",
       color: "danger",
       trend: "down",
@@ -239,12 +283,12 @@ export function ReportPage() {
     },
   ];
 
-  // Hour Summary Cards Configuration - หลากหลายมากขึ้น
+  // Hour Summary Cards Configuration - ใช้ค่าจาก API
   const allHourCards = [
     {
       id: "totalOT",
       title: "รวมชั่วโมง OT",
-      value: "450h",
+      value: `${hourSummary?.totalOTHours || 0}h`,
       subtext: "+5% เมื่อเทียบเดือนก่อนหน้า",
       bgColor: "bg-blue-50",
       borderColor: "border-blue-100",
@@ -255,7 +299,7 @@ export function ReportPage() {
     {
       id: "avgOT",
       title: "ค่าเฉลี่ย OT ต่อพนักงาน",
-      value: "3.6h",
+      value: `${hourSummary?.avgOTPerEmployee || 0}h`,
       subtext: "-2% เมื่อเทียบเดือนก่อนหน้า",
       bgColor: "bg-purple-50",
       borderColor: "border-purple-100",
@@ -266,7 +310,7 @@ export function ReportPage() {
     {
       id: "maxOT",
       title: "ชั่วโมง OT สูงสุด",
-      value: "4h ต่อพนักงาน",
+      value: `${hourSummary?.maxOTHours || 0}h ต่อพนักงาน`,
       subtext: "คำนวณจากอัตราเฉลี่ย",
       bgColor: "bg-orange-50",
       borderColor: "border-orange-100",
@@ -277,7 +321,7 @@ export function ReportPage() {
     {
       id: "totalWorkHours",
       title: "รวมชั่วโมงทำงาน",
-      value: "4,960h",
+      value: `${(hourSummary?.totalWorkHours || 0).toLocaleString()}h`,
       subtext: "ชั่วโมงทำงานปกติทั้งหมด",
       bgColor: "bg-green-50",
       borderColor: "border-green-100",
@@ -288,7 +332,7 @@ export function ReportPage() {
     {
       id: "avgWorkHours",
       title: "ค่าเฉลี่ยชั่วโมงทำงาน",
-      value: "40h/สัปดาห์",
+      value: `${hourSummary?.avgWorkHoursPerWeek || 40}h/สัปดาห์`,
       subtext: "ต่อพนักงาน 1 คน",
       bgColor: "bg-teal-50",
       borderColor: "border-teal-100",
@@ -299,7 +343,7 @@ export function ReportPage() {
     {
       id: "leaveHours",
       title: "รวมชั่วโมงลางาน",
-      value: "120h",
+      value: `${hourSummary?.totalBreakHours || 0}h`,
       subtext: "ลาป่วย, ลากิจ, ลาพักร้อน",
       bgColor: "bg-amber-50",
       borderColor: "border-amber-100",
@@ -310,7 +354,7 @@ export function ReportPage() {
     {
       id: "trainingHours",
       title: "รวมชั่วโมงอบรม",
-      value: "80h",
+      value: `${hourSummary?.trainingHours || 0}h`,
       subtext: "+15% เมื่อเทียบเดือนก่อนหน้า",
       bgColor: "bg-indigo-50",
       borderColor: "border-indigo-100",
@@ -321,7 +365,7 @@ export function ReportPage() {
     {
       id: "meetingHours",
       title: "รวมชั่วโมงประชุม",
-      value: "200h",
+      value: `${hourSummary?.meetingHours || 0}h`,
       subtext: "เฉลี่ย 1.6h ต่อพนักงาน",
       bgColor: "bg-pink-50",
       borderColor: "border-pink-100",
@@ -332,7 +376,7 @@ export function ReportPage() {
     {
       id: "otCost",
       title: "ค่าใช้จ่าย OT",
-      value: "฿45,000",
+      value: `฿${(hourSummary?.estimatedOTCost || 0).toLocaleString()}`,
       subtext: "+8% เมื่อเทียบเดือนก่อนหน้า",
       bgColor: "bg-red-50",
       borderColor: "border-red-100",
@@ -388,64 +432,14 @@ export function ReportPage() {
     .map((id) => allHourCards.find((card) => card.id === id))
     .filter(Boolean);
 
-  // Mock Data for Monthly Summary
-  const monthlySummary = [
-    { month: "January", attendance: "98%", late: "2%", overtime: "120h" },
-    { month: "February", attendance: "97%", late: "3%", overtime: "110h" },
-    { month: "March", attendance: "99%", late: "1%", overtime: "130h" },
-    { month: "April", attendance: "96%", late: "4%", overtime: "100h" },
-    { month: "May", attendance: "98%", late: "2%", overtime: "125h" },
-  ];
+  // ใช้ข้อมูลจาก API (หรือค่าเริ่มต้นถ้ายังโหลดไม่เสร็จ)
+  const monthlySummary = monthlySummaryData || [];
+  const attendanceTrend = attendanceTrendData || [];
+  const departmentDistribution = departmentDistributionData || [];
+  const individualSummary = individualSummaryData || [];
 
-  // Mock Data for Charts
-  const attendanceTrend = [
-    { label: "01 Apr", value: 96 },
-    { label: "08 Apr", value: 97 },
-    { label: "15 Apr", value: 95 },
-    { label: "22 Apr", value: 98 },
-    { label: "29 Apr", value: 99 },
-    { label: "06 May", value: 98 },
-    { label: "13 May", value: 97 },
-    { label: "20 May", value: 98 },
-    { label: "27 May", value: 99 },
-  ];
-
-  const departmentDistribution = [
-    { department: "IT", count: 32 },
-    { department: "HR", count: 12 },
-    { department: "Sales", count: 40 },
-    { department: "Finance", count: 20 },
-  ];
-
-  const totalDept = departmentDistribution.reduce((s, d) => s + d.count, 0);
-
-  // Mock Data for Individual Summary
-  const individualSummary = [
-    {
-      name: "Somchai Jai-dee",
-      department: "IT",
-      attendanceRate: "100%",
-      lateCount: 0,
-      absentCount: 0,
-      otHours: "10h",
-    },
-    {
-      name: "Somsri Rak-ngan",
-      department: "HR",
-      attendanceRate: "95%",
-      lateCount: 2,
-      absentCount: 0,
-      otHours: "5h",
-    },
-    {
-      name: "Mana Dee-mak",
-      department: "Sales",
-      attendanceRate: "90%",
-      lateCount: 4,
-      absentCount: 1,
-      otHours: "20h",
-    },
-  ];
+  const totalDept =
+    departmentDistribution.reduce((s, d) => s + d.count, 0) || 1;
 
   return (
     <div className="space-y-6">
@@ -478,194 +472,229 @@ export function ReportPage() {
               className="h-10"
             />
           </div>
+          <button
+            onClick={handleSearch}
+            disabled={loading}
+            className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-primary/90 transition-colors h-10 disabled:opacity-50"
+          >
+            {loading ? "กำลังโหลด..." : "ค้นหา"}
+          </button>
           <button className="px-4 py-2 bg-white border border-gray-200 text-text-main rounded-md text-sm font-medium hover:bg-gray-50 transition-colors h-10">
             ส่งออก
           </button>
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-text-main">ภาพรวมสถิติ</h2>
-          <button
-            onClick={() => setShowStatsSettings(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-sub hover:text-text-main hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <SettingsIcon className="w-4 h-4" />
-            ตั้งค่าการ์ด
-          </button>
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+          {error}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {selectedStatsCards.map((card) => (
-            <StatsCard
-              key={card.id}
-              title={card.title}
-              value={card.value}
-              icon={
-                <span className={`text-${card.color}`}>
-                  {React.cloneElement(iconMap[card.icon], {
-                    className: "w-4 h-4",
-                  })}
-                </span>
-              }
-              color={card.color}
-              trend={card.trend}
-              trendValue={card.trendValue}
-            />
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Hour Summary Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-text-main">สรุปชั่วโมง</h2>
-          <button
-            onClick={() => setShowHourSettings(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-sub hover:text-text-main hover:bg-gray-100 rounded-md transition-colors"
-          >
-            <SettingsIcon className="w-4 h-4" />
-            ตั้งค่าการ์ด
-          </button>
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <span className="ml-3 text-text-sub">กำลังโหลดข้อมูล...</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {selectedHourCards.map((card) => (
-            <div
-              key={card.id}
-              className={`p-4 ${card.bgColor} rounded-lg border ${card.borderColor}`}
-            >
-              <div className={`text-sm ${card.textColor} font-medium`}>
-                {card.title}
-              </div>
-              <div className={`text-2xl font-bold ${card.valueColor} mt-1`}>
-                {card.value}
-              </div>
-              <div className={`text-xs ${card.subTextColor} mt-1`}>
-                {card.subtext}
-              </div>
+      )}
+
+      {!loading && (
+        <>
+          {/* Stats Overview */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-text-main">ภาพรวมสถิติ</h2>
+              <button
+                onClick={() => setShowStatsSettings(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-sub hover:text-text-main hover:bg-gray-100 rounded-md transition-colors"
+              >
+                <SettingsIcon className="w-4 h-4" />
+                ตั้งค่าการ์ด
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Individual Summary Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-100">
-          <h2 className="font-semibold text-text-main">
-            สรุปการเข้างานรายบุคคล
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-3">พนักงาน</th>
-                <th className="px-6 py-3">แผนก</th>
-                <th className="px-6 py-3">อัตราการเข้าทำงาน</th>
-                <th className="px-6 py-3">สาย (วัน)</th>
-                <th className="px-6 py-3">ขาดงาน (วัน)</th>
-                <th className="px-6 py-3">ชั่วโมง OT</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {individualSummary.map((item) => (
-                <tr
-                  key={item.name}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 font-medium text-text-main">
-                    {item.name}
-                  </td>
-                  <td className="px-6 py-4 text-text-sub">{item.department}</td>
-                  <td className="px-6 py-4 text-success font-medium">
-                    {item.attendanceRate}
-                  </td>
-                  <td className="px-6 py-4 text-warning">{item.lateCount}</td>
-                  <td className="px-6 py-4 text-danger">{item.absentCount}</td>
-                  <td className="px-6 py-4 text-primary">{item.otHours}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Monthly Summary Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-100">
-          <h2 className="font-semibold text-text-main">
-            Monthly Attendance Summary
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-3">Month</th>
-                <th className="px-6 py-3">Attendance Rate</th>
-                <th className="px-6 py-3">Late Rate</th>
-                <th className="px-6 py-3">Total Overtime</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {monthlySummary.map((item) => (
-                <tr
-                  key={item.month}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 font-medium text-text-main">
-                    {item.month}
-                  </td>
-                  <td className="px-6 py-4 text-success font-medium">
-                    {item.attendance}
-                  </td>
-                  <td className="px-6 py-4 text-danger">{item.late}</td>
-                  <td className="px-6 py-4 text-text-sub">{item.overtime}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-64">
-          <h3 className="text-sm font-medium text-text-main mb-2">
-            Attendance Trend
-          </h3>
-          <div className="w-full h-52">
-            <LineChart data={attendanceTrend} stroke="#3b82f6" />
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-64">
-          <h3 className="text-sm font-medium text-text-main mb-2">
-            Department Distribution
-          </h3>
-          <div className="w-full h-52 flex items-center">
-            <div className="w-1/2 h-full">
-              <PieChart
-                data={departmentDistribution}
-                width={220}
-                height={220}
-              />
-            </div>
-            <div className="w-1/2 pl-4">
-              <ul className="text-sm text-text-sub">
-                {departmentDistribution.map((d) => (
-                  <li key={d.department} className="mb-2">
-                    <span className="font-medium">{d.department}</span>
-                    <span className="ml-2">
-                      — {d.count} ({Math.round((d.count / totalDept) * 100)}%)
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {selectedStatsCards.map((card) => (
+                <StatsCard
+                  key={card.id}
+                  title={card.title}
+                  value={card.value}
+                  icon={
+                    <span className={`text-${card.color}`}>
+                      {React.cloneElement(iconMap[card.icon], {
+                        className: "w-4 h-4",
+                      })}
                     </span>
-                  </li>
-                ))}
-              </ul>
+                  }
+                  color={card.color}
+                  trend={card.trend}
+                  trendValue={card.trendValue}
+                />
+              ))}
             </div>
           </div>
-        </div>
-      </div>
+
+          {/* Hour Summary Section */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-text-main">สรุปชั่วโมง</h2>
+              <button
+                onClick={() => setShowHourSettings(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-sub hover:text-text-main hover:bg-gray-100 rounded-md transition-colors"
+              >
+                <SettingsIcon className="w-4 h-4" />
+                ตั้งค่าการ์ด
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {selectedHourCards.map((card) => (
+                <div
+                  key={card.id}
+                  className={`p-4 ${card.bgColor} rounded-lg border ${card.borderColor}`}
+                >
+                  <div className={`text-sm ${card.textColor} font-medium`}>
+                    {card.title}
+                  </div>
+                  <div className={`text-2xl font-bold ${card.valueColor} mt-1`}>
+                    {card.value}
+                  </div>
+                  <div className={`text-xs ${card.subTextColor} mt-1`}>
+                    {card.subtext}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Individual Summary Table */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-semibold text-text-main">
+                สรุปการเข้างานรายบุคคล
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-3">พนักงาน</th>
+                    <th className="px-6 py-3">แผนก</th>
+                    <th className="px-6 py-3">อัตราการเข้าทำงาน</th>
+                    <th className="px-6 py-3">สาย (วัน)</th>
+                    <th className="px-6 py-3">ขาดงาน (วัน)</th>
+                    <th className="px-6 py-3">ชั่วโมง OT</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {individualSummary.map((item) => (
+                    <tr
+                      key={item.name}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-medium text-text-main">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 text-text-sub">
+                        {item.department}
+                      </td>
+                      <td className="px-6 py-4 text-success font-medium">
+                        {item.attendanceRate}
+                      </td>
+                      <td className="px-6 py-4 text-warning">
+                        {item.lateCount}
+                      </td>
+                      <td className="px-6 py-4 text-danger">
+                        {item.absentCount}
+                      </td>
+                      <td className="px-6 py-4 text-primary">{item.otHours}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Monthly Summary Table */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="font-semibold text-text-main">
+                Monthly Attendance Summary
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 text-text-sub font-medium border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-3">Month</th>
+                    <th className="px-6 py-3">Attendance Rate</th>
+                    <th className="px-6 py-3">Late Rate</th>
+                    <th className="px-6 py-3">Total Overtime</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {monthlySummary.map((item) => (
+                    <tr
+                      key={item.month}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-medium text-text-main">
+                        {item.month}
+                      </td>
+                      <td className="px-6 py-4 text-success font-medium">
+                        {item.attendance}
+                      </td>
+                      <td className="px-6 py-4 text-danger">{item.late}</td>
+                      <td className="px-6 py-4 text-text-sub">
+                        {item.overtime}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Charts */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-64">
+              <h3 className="text-sm font-medium text-text-main mb-2">
+                Attendance Trend
+              </h3>
+              <div className="w-full h-52">
+                <LineChart data={attendanceTrend} stroke="#3b82f6" />
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-64">
+              <h3 className="text-sm font-medium text-text-main mb-2">
+                Department Distribution
+              </h3>
+              <div className="w-full h-52 flex items-center">
+                <div className="w-1/2 h-full">
+                  <PieChart
+                    data={departmentDistribution}
+                    width={220}
+                    height={220}
+                  />
+                </div>
+                <div className="w-1/2 pl-4">
+                  <ul className="text-sm text-text-sub">
+                    {departmentDistribution.map((d) => (
+                      <li key={d.department} className="mb-2">
+                        <span className="font-medium">{d.department}</span>
+                        <span className="ml-2">
+                          — {d.count} ({Math.round((d.count / totalDept) * 100)}
+                          %)
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Stats Settings Modal */}
       <Modal

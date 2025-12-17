@@ -50,4 +50,13 @@ export const API_ENDPOINTS = {
     ACTIVITIES: "/dashboard/activities",
     EMPLOYEE_HISTORY: (id) => `/dashboard/employee/${id}/history`,
   },
+  REPORTS: {
+    BASE: "/reports",
+    OVERVIEW: "/reports/overview",
+    HOURS: "/reports/hours",
+    TREND: "/reports/trend",
+    DEPARTMENTS: "/reports/departments",
+    MONTHLY: "/reports/monthly",
+    INDIVIDUAL: "/reports/individual",
+  },
 };
