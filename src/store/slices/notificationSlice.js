@@ -15,6 +15,10 @@ const initialState = {
   maxNotifications: 5, // จำนวนสูงสุดที่แสดงพร้อมกัน
 };
 
+// Monotonic counter used as additional entropy in very old environments
+// where crypto APIs are unavailable. This avoids relying on Math.random().
+let idCounter = 0;
+
 // สร้าง unique ID สำหรับแต่ละ notification (ใช้ CSPRNG แทน Math.random())
 const generateId = () => {
   // Prefer crypto.randomUUID if available (modern browsers)
@@ -31,16 +35,18 @@ const generateId = () => {
     return `notif_${Date.now()}_${hex}`;
   }
 
-  // Last resort fallback (non-cryptographic). This path is only used when
-  // crypto APIs are unavailable (very old environments). It is NOT
-  // cryptographically secure and must never be used for security-sensitive
-  // values. We combine several entropy sources and a simple FNV-1a hash to
-  // reduce collisions for IDs used purely for UI/visibility purposes.
+  // ตัวเลือกสุดท้าย (ไม่ใช่แบบเข้ารหัส) เส้นทางนี้ใช้เฉพาะเมื่อ
+  // API การเข้ารหัสไม่สามารถใช้งานได้ (สภาพแวดล้อมเก่ามาก) ซึ่งมันไม่ได้
+  // ปลอดภัยด้านการเข้ารหัสและไม่ควรใช้กับค่าที่เกี่ยวข้องกับความปลอดภัย
+  // เรารวมแหล่งความไม่แน่นอนหลายอย่างกับแฮช FNV-1a แบบง่ายเพื่อ
+  // ลดการชนกันสำหรับรหัส ID ที่ใช้เฉพาะใน UI/การมองเห็น
+  // หมายเหตุ: หลีกเลี่ยงการใช้ Math.random() ที่นี่ ใช้ตัวนับแบบโมโนโทนิก
+  // ร่วมกับข้อมูลเวลาเพื่อลดความเสี่ยงการชนกันของ ID ใน UI สำหรับสภาพแวดล้อมเก่าที่ไม่รองรับการเข้ารหัส
   const seed = `${Date.now()}_${
     typeof performance !== "undefined" && performance.now
       ? performance.now()
       : 0
-  }_${Math.random()}`;
+  }_${++idCounter}`;
   let hash = 2166136261 >>> 0;
   for (let i = 0; i < seed.length; i++) {
     hash ^= seed.codePointAt(i);
