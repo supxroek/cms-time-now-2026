@@ -98,8 +98,8 @@ export function MainLayout() {
               variant="ghost"
               onClick={logout}
               className="w-full mt-3 text-xs justify-start text-danger hover:bg-danger/5 hover:text-danger"
+              icon={<SignOutIcon />}
             >
-              <SignOutIcon />
               Sign Out
             </Button>
           </div>

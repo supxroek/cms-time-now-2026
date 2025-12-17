@@ -19,6 +19,7 @@ import {
 import { Modal } from "../components/molecules/Modal";
 import { Button } from "../components/atoms/Button";
 import { Input } from "../components/atoms/Input";
+import { useNotification } from "../hooks/useNotification";
 
 const REQUEST_TYPES = {
   work_in: "เข้างาน",
@@ -49,6 +50,7 @@ export function RequestPage() {
     historyLoading,
     actionLoading,
   } = useSelector((state) => state.requests);
+  const { success, error: showError } = useNotification();
   const [activeTab, setActiveTab] = useState("pending"); // 'pending' | 'history'
   const [filterType, setFilterType] = useState("ทุกประเภท");
   const [selectedEvidence, setSelectedEvidence] = useState(null);
@@ -90,15 +92,30 @@ export function RequestPage() {
   };
 
   const executeConfirmAction = async () => {
-    if (confirmModal.type === "approve") {
-      dispatch(approveRequest(confirmModal.id));
-    } else if (confirmModal.type === "reject") {
-      dispatch(rejectRequest(confirmModal.id));
+    try {
+      if (confirmModal.type === "approve") {
+        await dispatch(approveRequest(confirmModal.id)).unwrap();
+        success("อนุมัติสำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว");
+      } else if (confirmModal.type === "reject") {
+        await dispatch(rejectRequest(confirmModal.id)).unwrap();
+        success("ปฏิเสธสำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว");
+      }
+      setConfirmModal({ isOpen: false, type: null, id: null });
+      // Refresh pending list
+      dispatch(fetchPendingRequests());
+      dispatch(fetchRequestStats());
+    } catch (error) {
+      console.error("Failed to process request:", error);
+      showError(
+        confirmModal.type === "approve"
+          ? "อนุมัติไม่สำเร็จ"
+          : "ปฏิเสธไม่สำเร็จ",
+        typeof error === "string"
+          ? error
+          : error?.message || "ไม่สามารถดำเนินการคำขอได้"
+      );
+      setConfirmModal({ isOpen: false, type: null, id: null });
     }
-    setConfirmModal({ isOpen: false, type: null, id: null });
-    // Refresh pending list
-    dispatch(fetchPendingRequests());
-    dispatch(fetchRequestStats());
   };
 
   const handleHistoryFilterChange = (key, value) => {

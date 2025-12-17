@@ -22,11 +22,13 @@ import {
   UserXIcon,
 } from "../components/atoms/Icons";
 import { formatDate } from "../utils/dateUtils";
+import { useNotification } from "../hooks/useNotification";
 
 export function EmployeePage() {
   const dispatch = useDispatch();
   const { employees, isLoading } = useSelector((state) => state.employee);
   const { departments, companyInfo } = useSelector((state) => state.company);
+  const { success, error: showError } = useNotification();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [editModal, setEditModal] = useState({ isOpen: false, employee: null });
@@ -122,8 +124,15 @@ export function EmployeePage() {
           data: dataToSubmit,
         })
       ).unwrap();
+      success("อัพเดทสำเร็จ", "แก้ไขข้อมูลพนักงานเรียบร้อยแล้ว");
     } catch (error) {
       console.error("Failed to update employee:", error);
+      showError(
+        "อัพเดทไม่สำเร็จ",
+        typeof error === "string"
+          ? error
+          : error?.message || "ไม่สามารถแก้ไขข้อมูลพนักงานได้"
+      );
       setLocalEmployees(employees); // Revert on error
     }
   };
@@ -146,8 +155,15 @@ export function EmployeePage() {
           resignDate: resignDate,
         })
       ).unwrap();
+      success("บันทึกสำเร็จ", "บันทึกการลาออกเรียบร้อยแล้ว");
     } catch (error) {
       console.error("Failed to resign employee:", error);
+      showError(
+        "บันทึกไม่สำเร็จ",
+        typeof error === "string"
+          ? error
+          : error?.message || "ไม่สามารถบันทึกการลาออกได้"
+      );
       setLocalEmployees(employees); // Revert on error
     }
   };
@@ -161,8 +177,15 @@ export function EmployeePage() {
 
     try {
       await dispatch(deleteEmployee(id)).unwrap();
+      success("ลบสำเร็จ", "ลบข้อมูลพนักงานเรียบร้อยแล้ว");
     } catch (error) {
       console.error("Failed to delete employee:", error);
+      showError(
+        "ลบไม่สำเร็จ",
+        typeof error === "string"
+          ? error
+          : error?.message || "ไม่สามารถลบข้อมูลพนักงานได้"
+      );
       setLocalEmployees(employees); // Revert on error
     }
   };

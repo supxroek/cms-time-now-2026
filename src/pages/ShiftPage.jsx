@@ -24,6 +24,7 @@ import { ShiftCard } from "../components/molecules/ShiftCard";
 import { OTCard } from "../components/molecules/OTCard";
 import { ShiftForm } from "../components/molecules/ShiftForm";
 import { OTForm } from "../components/molecules/OTForm";
+import { useNotification } from "../hooks/useNotification";
 
 export function ShiftPage() {
   const dispatch = useDispatch();
@@ -31,6 +32,7 @@ export function ShiftPage() {
   const { overtimes } = useSelector((state) => state.overtime);
   const { employees } = useSelector((state) => state.employee);
   const { departments, companyInfo } = useSelector((state) => state.company);
+  const { success, error: showError } = useNotification();
 
   const [activeTab, setActiveTab] = useState("shift");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -200,12 +202,20 @@ export function ShiftPage() {
         await dispatch(
           updateShift({ id: editingShift.id, data: payload })
         ).unwrap();
+        success("อัพเดทสำเร็จ", "แก้ไขข้อมูลกะการทำงานเรียบร้อยแล้ว");
       } else {
         await dispatch(createShift(payload)).unwrap();
+        success("สร้างสำเร็จ", "สร้างกะการทำงานใหม่เรียบร้อยแล้ว");
       }
       handleCloseModal();
     } catch (error) {
       console.error("Failed to save shift:", error);
+      showError(
+        editingShift ? "อัพเดทไม่สำเร็จ" : "สร้างไม่สำเร็จ",
+        typeof error === "string"
+          ? error
+          : error?.message || "ไม่สามารถบันทึกกะการทำงานได้"
+      );
     }
   };
 
@@ -218,10 +228,22 @@ export function ShiftPage() {
     if (deletingShift) {
       try {
         await dispatch(deleteShift(deletingShift.id)).unwrap();
+        success(
+          "ลบสำเร็จ",
+          `ลบกะการทำงาน "${
+            deletingShift.shift_name || deletingShift.name
+          }" เรียบร้อยแล้ว`
+        );
         setIsDeleteModalOpen(false);
         setDeletingShift(null);
       } catch (error) {
         console.error("Failed to delete shift:", error);
+        showError(
+          "ลบไม่สำเร็จ",
+          typeof error === "string"
+            ? error
+            : error?.message || "ไม่สามารถลบกะการทำงานได้"
+        );
       }
     }
   };
@@ -288,12 +310,20 @@ export function ShiftPage() {
         await dispatch(
           updateOvertime({ id: editingOT.id, data: payload })
         ).unwrap();
+        success("อัพเดทสำเร็จ", "แก้ไขข้อมูล OT เรียบร้อยแล้ว");
       } else {
         await dispatch(createOvertime(payload)).unwrap();
+        success("สร้างสำเร็จ", "สร้าง OT ใหม่เรียบร้อยแล้ว");
       }
       handleCloseOTModal();
     } catch (error) {
       console.error("Failed to save overtime:", error);
+      showError(
+        editingOT ? "อัพเดทไม่สำเร็จ" : "สร้างไม่สำเร็จ",
+        typeof error === "string"
+          ? error
+          : error?.message || "ไม่สามารถบันทึก OT ได้"
+      );
     }
   };
 
@@ -306,10 +336,20 @@ export function ShiftPage() {
     if (deletingOT) {
       try {
         await dispatch(deleteOvertime(deletingOT.id)).unwrap();
+        success(
+          "ลบสำเร็จ",
+          `ลบ OT "${deletingOT.overTimeName || deletingOT.name}" เรียบร้อยแล้ว`
+        );
         setIsOTDeleteModalOpen(false);
         setDeletingOT(null);
       } catch (error) {
         console.error("Failed to delete overtime:", error);
+        showError(
+          "ลบไม่สำเร็จ",
+          typeof error === "string"
+            ? error
+            : error?.message || "ไม่สามารถลบ OT ได้"
+        );
       }
     }
   };
@@ -319,8 +359,13 @@ export function ShiftPage() {
       await dispatch(
         updateShift({ id: shift.id, data: { is_shift: checked ? 1 : 0 } })
       ).unwrap();
+      success(
+        "อัพเดทสำเร็จ",
+        checked ? "เปิดใช้งานกะการทำงานแล้ว" : "ปิดใช้งานกะการทำงานแล้ว"
+      );
     } catch (error) {
       console.error("Failed to update shift status:", error);
+      showError("อัพเดทไม่สำเร็จ", "ไม่สามารถเปลี่ยนสถานะกะการทำงานได้");
     }
   };
 
@@ -457,8 +502,8 @@ export function ShiftPage() {
           onClick={() =>
             activeTab === "shift" ? handleOpenModal() : handleOpenOTModal()
           }
+          icon={<PlusIcon className="w-4 h-4" />}
         >
-          <PlusIcon className="w-4 h-4 mr-2" />
           {activeTab === "shift" ? "สร้างกะงานใหม่" : "สร้างรายการ OT"}
         </Button>
       </div>

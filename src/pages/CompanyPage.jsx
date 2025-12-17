@@ -33,6 +33,7 @@ import {
 } from "../components/atoms/Icons";
 import { Modal, ConfirmModal } from "../components/molecules/Modal";
 import { DeviceAccessModal } from "../components/molecules/DeviceAccessModal";
+import { useNotification } from "../hooks/useNotification";
 import PropTypes from "prop-types";
 
 // จัดการปุ่มแท็บ
@@ -76,6 +77,7 @@ function useCompanyLogic() {
   const { companyInfo, departments, devices, isLoading } = useSelector(
     (state) => state.company
   );
+  const { success, error: showError } = useNotification();
 
   const [activeTab, setActiveTab] = useState("info");
   const [isEditing, setIsEditing] = useState(false);
@@ -163,8 +165,17 @@ function useCompanyLogic() {
       .then(() => {
         setIsEditing(false);
         setValidationErrors({});
+        success("บันทึกสำเร็จ", "อัพเดทข้อมูลบริษัทเรียบร้อยแล้ว");
       })
-      .catch((error) => console.error("Failed to update company info:", error));
+      .catch((error) => {
+        console.error("Failed to update company info:", error);
+        showError(
+          "บันทึกไม่สำเร็จ",
+          typeof error === "string"
+            ? error
+            : error?.message || "ไม่สามารถอัพเดทข้อมูลบริษัทได้"
+        );
+      });
   };
   // เริ่มแก้ไขข้อมูล
   const handleEditClick = () => {
@@ -223,6 +234,7 @@ function useCompanyLogic() {
     try {
       if (isAdd) {
         await dispatch(addDepartment(data)).unwrap();
+        success("เพิ่มสำเร็จ", "เพิ่มแผนกใหม่เรียบร้อยแล้ว");
       } else {
         // Fix for 400 Bad Request: Only send necessary fields
         const payload = {
@@ -233,10 +245,15 @@ function useCompanyLogic() {
           headDep_tel: data.headDep_tel,
         };
         await dispatch(updateDepartment(payload)).unwrap();
+        success("อัพเดทสำเร็จ", "แก้ไขข้อมูลแผนกเรียบร้อยแล้ว");
       }
       dispatch(fetchDepartments());
     } catch (err) {
       console.error(err);
+      showError(
+        isAdd ? "เพิ่มไม่สำเร็จ" : "อัพเดทไม่สำเร็จ",
+        typeof err === "string" ? err : err?.message || "ไม่สามารถดำเนินการได้"
+      );
       setLocalDepartments(departments || []); // Revert
     }
   };
@@ -299,12 +316,20 @@ function useCompanyLogic() {
     try {
       if (isAdd) {
         await dispatch(addDevice(data)).unwrap();
+        success("เพิ่มสำเร็จ", "เพิ่มอุปกรณ์ใหม่เรียบร้อยแล้ว");
       } else {
         await dispatch(updateDevice(data)).unwrap();
+        success("อัพเดทสำเร็จ", "แก้ไขข้อมูลอุปกรณ์เรียบร้อยแล้ว");
       }
       dispatch(fetchDevices());
     } catch (err) {
       console.error(err);
+      showError(
+        isAdd ? "เพิ่มไม่สำเร็จ" : "อัพเดทไม่สำเร็จ",
+        typeof err === "string"
+          ? err
+          : err?.message || "ไม่สามารถดำเนินการอุปกรณ์ได้"
+      );
       setLocalDevices(devices || []); // Revert
     }
   };
@@ -326,10 +351,17 @@ function useCompanyLogic() {
     setIsTogglingDepartment(true);
     dispatch(updateCompanyInfo({ hasDepartment: checked ? 1 : 0 }))
       .unwrap()
-      .then(() => setIsTogglingDepartment(false))
+      .then(() => {
+        setIsTogglingDepartment(false);
+        success(
+          "อัพเดทสำเร็จ",
+          checked ? "เปิดใช้งานระบบแผนกแล้ว" : "ปิดใช้งานระบบแผนกแล้ว"
+        );
+      })
       .catch((err) => {
         console.error("Failed to update company department status:", err);
         setIsTogglingDepartment(false);
+        showError("อัพเดทไม่สำเร็จ", "ไม่สามารถเปลี่ยนสถานะระบบแผนกได้");
       });
   };
 
@@ -355,10 +387,17 @@ function useCompanyLogic() {
       .unwrap()
       .then(() => {
         console.log("Device synced successfully");
+        success("ซิงค์สำเร็จ", "ซิงค์ข้อมูลอุปกรณ์เรียบร้อยแล้ว");
         setTimeout(() => removeSyncingDevice(deviceId), 1000);
       })
       .catch((err) => {
         console.error("Failed to sync device:", err);
+        showError(
+          "ซิงค์ไม่สำเร็จ",
+          typeof err === "string"
+            ? err
+            : err?.message || "ไม่สามารถซิงค์ข้อมูลอุปกรณ์ได้"
+        );
         removeSyncingDevice(deviceId);
       });
   };
@@ -380,6 +419,7 @@ function useCompanyLogic() {
   const handleConfirmDelete = async () => {
     const isDept = deleteModal.type === "department";
     const id = deleteModal.id;
+    const itemName = deleteModal.name;
 
     // Optimistic Update
     if (isDept) {
@@ -393,10 +433,20 @@ function useCompanyLogic() {
     try {
       const action = isDept ? deleteDepartment : deleteDevice;
       await dispatch(action(id)).unwrap();
+      success(
+        "ลบสำเร็จ",
+        `ลบ${isDept ? "แผนก" : "อุปกรณ์"} "${itemName}" เรียบร้อยแล้ว`
+      );
       if (isDept) dispatch(fetchDepartments());
       else dispatch(fetchDevices());
     } catch (err) {
       console.error(err);
+      const itemType = isDept ? "แผนก" : "อุปกรณ์";
+      const errorMsg =
+        typeof err === "string"
+          ? err
+          : err?.message || `ไม่สามารถลบ${itemType}ได้`;
+      showError("ลบไม่สำเร็จ", errorMsg);
       // Revert
       if (isDept) setLocalDepartments(departments || []);
       else setLocalDevices(devices || []);
@@ -426,9 +476,16 @@ function useCompanyLogic() {
           employeeIds: employeeIds,
         })
       ).unwrap();
+      success("บันทึกสำเร็จ", "อัพเดทสิทธิ์การเข้าถึงอุปกรณ์เรียบร้อยแล้ว");
       dispatch(fetchDevices());
     } catch (err) {
       console.error(err);
+      showError(
+        "บันทึกไม่สำเร็จ",
+        typeof err === "string"
+          ? err
+          : err?.message || "ไม่สามารถอัพเดทสิทธิ์การเข้าถึงได้"
+      );
       setLocalDevices(devices || []); // Revert
     }
   };
@@ -923,8 +980,10 @@ function DevicesSection({
         <h3 className="text-lg font-semibold text-text-main font-display">
           รายการอุปกรณ์
         </h3>
-        <Button onClick={() => openDeviceModal("add")}>
-          <DevicesIcon className="w-4 h-4 mr-2" />
+        <Button
+          onClick={() => openDeviceModal("add")}
+          icon={<DevicesIcon className="w-4 h-4" />}
+        >
           ลงทะเบียนอุปกรณ์
         </Button>
       </div>
@@ -981,8 +1040,8 @@ function DevicesSection({
                       onClick={() => openAccessModal(device)}
                       className="text-xs px-3 py-1 h-auto"
                       disabled={String(device.id).startsWith("temp-")}
+                      icon={<UsersIcon className="w-3 h-3" />}
                     >
-                      <UsersIcon className="w-3 h-3 mr-1.5" />
                       จัดการสิทธิ์ ({device.employeeIds?.length || 0})
                     </Button>
                   </td>

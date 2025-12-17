@@ -8,6 +8,7 @@ import overtimeReducer from "./slices/overtimeSlice";
 import requestReducer from "./slices/requestSlice";
 import dashboardReducer from "./slices/dashboardSlice";
 import reportReducer from "./slices/reportSlice";
+import notificationReducer from "./slices/notificationSlice";
 
 export const store = configureStore({
   // รวม reducers จาก slices ต่าง ๆ
@@ -21,6 +22,7 @@ export const store = configureStore({
     requests: requestReducer, // ตัวจัดการคำขอ
     dashboard: dashboardReducer, // ตัวจัดการ Dashboard
     report: reportReducer, // ตัวจัดการ Report
+    notification: notificationReducer, // ตัวจัดการการแจ้งเตือน
   },
 });
 

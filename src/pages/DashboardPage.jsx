@@ -487,7 +487,7 @@ export function DashboardPage() {
                             {record.user?.name || "ไม่ทราบชื่อ"}
                           </div>
                           <div className="text-xs text-text-sub">
-                            {record.user?.role || "-"}
+                            {record.user?.lineUserId || "-"}
                           </div>
                         </div>
                       </div>

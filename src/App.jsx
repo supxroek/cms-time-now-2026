@@ -14,6 +14,9 @@ import { RequestPage } from "./pages/RequestPage";
 import { ReportPage } from "./pages/ReportPage";
 import { MainLayout } from "./layouts/MainLayout";
 import { useAuth } from "./hooks/useAuth";
+import { Toast } from "./components/atoms/Toast";
+import { ConnectionStatus } from "./components/molecules/ConnectionStatus";
+import { ErrorBoundary } from "./components/molecules/ErrorBoundary";
 
 import PropTypes from "prop-types";
 
@@ -53,30 +56,38 @@ PlaceholderPage.propTypes = {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes (เข้าได้เฉพาะตอนยังไม่ Login) */}
-        <Route element={<PublicRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-        </Route>
+    <ErrorBoundary message="เกิดข้อผิดพลาดในการโหลดแอปพลิเคชัน">
+      <BrowserRouter>
+        {/* Toast Container สำหรับแสดง notifications */}
+        <Toast position="top-right" />
 
-        {/* Protected Routes (ต้อง Login ก่อน) */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/company" element={<CompanyPage />} />
-          <Route path="/employees" element={<EmployeePage />} />
-          <Route path="/shifts" element={<ShiftPage />} />
-          <Route path="/requests" element={<RequestPage />} />
-          <Route path="/reports" element={<ReportPage />} />
+        {/* Connection Status Indicator */}
+        <ConnectionStatus />
 
-          {/* Redirect root to dashboard */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Route>
+        <Routes>
+          {/* Public Routes (เข้าได้เฉพาะตอนยังไม่ Login) */}
+          <Route element={<PublicRoute />}>
+            <Route path="/login" element={<LoginPage />} />
+          </Route>
 
-        {/* 404 Not Found - Redirect to root */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Protected Routes (ต้อง Login ก่อน) */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/company" element={<CompanyPage />} />
+            <Route path="/employees" element={<EmployeePage />} />
+            <Route path="/shifts" element={<ShiftPage />} />
+            <Route path="/requests" element={<RequestPage />} />
+            <Route path="/reports" element={<ReportPage />} />
+
+            {/* Redirect root to dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Route>
+
+          {/* 404 Not Found - Redirect to root */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
