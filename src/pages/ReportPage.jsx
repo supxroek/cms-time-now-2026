@@ -1,12 +1,14 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { StatsCard } from "../components/molecules/StatsCard";
 import { Input } from "../components/atoms/Input";
 import { Label } from "../components/atoms/Label";
+import { Modal } from "../components/molecules/Modal";
 import {
   ReportsIcon,
   UsersIcon,
   ClockIcon,
   CalendarIcon,
+  SettingsIcon,
 } from "../components/atoms/Icons";
 
 // Simple inline SVG Line Chart
@@ -143,6 +145,248 @@ PieChart.propTypes = {
 export function ReportPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showStatsSettings, setShowStatsSettings] = useState(false);
+  const [showHourSettings, setShowHourSettings] = useState(false);
+
+  // Stats cards - ต้องเลือก 4 อันเสมอ (เก็บเป็น array ของ id ที่เลือก)
+  const [selectedStatsIds, setSelectedStatsIds] = useState([
+    "totalEmployees",
+    "avgAttendance",
+    "totalOvertime",
+    "avgLate",
+  ]);
+
+  // Hour summary cards - ต้องเลือก 3 อันเสมอ
+  const [selectedHourIds, setSelectedHourIds] = useState([
+    "totalOT",
+    "avgOT",
+    "maxOT",
+  ]);
+
+  // Available Stats Cards Configuration
+  const allStatsCards = [
+    {
+      id: "totalEmployees",
+      title: "พนักงานทั้งหมด",
+      value: "124",
+      icon: "users",
+      color: "primary",
+      trend: "up",
+      trendValue: "4%",
+    },
+    {
+      id: "avgAttendance",
+      title: "ค่าเฉลี่ยการเข้าทำงาน",
+      value: "98.2%",
+      icon: "clock",
+      color: "success",
+      trend: "up",
+      trendValue: "1.2%",
+    },
+    {
+      id: "totalOvertime",
+      title: "ชั่วโมงล่วงเวลาทั้งหมด",
+      value: "450h",
+      icon: "calendar",
+      color: "warning",
+      trend: "down",
+      trendValue: "5%",
+    },
+    {
+      id: "avgLate",
+      title: "ค่าเฉลี่ยการมาสาย",
+      value: "12.5%",
+      icon: "reports",
+      color: "danger",
+      trend: "down",
+      trendValue: "2%",
+    },
+    {
+      id: "totalAbsent",
+      title: "จำนวนขาดงาน",
+      value: "8",
+      icon: "calendar",
+      color: "danger",
+      trend: "down",
+      trendValue: "3%",
+    },
+    {
+      id: "totalLeave",
+      title: "จำนวนลางาน",
+      value: "15",
+      icon: "calendar",
+      color: "info",
+      trend: "up",
+      trendValue: "1%",
+    },
+    {
+      id: "newEmployees",
+      title: "พนักงานใหม่",
+      value: "5",
+      icon: "users",
+      color: "success",
+      trend: "up",
+      trendValue: "2%",
+    },
+    {
+      id: "resignedEmployees",
+      title: "พนักงานลาออก",
+      value: "2",
+      icon: "users",
+      color: "danger",
+      trend: "down",
+      trendValue: "1%",
+    },
+  ];
+
+  // Hour Summary Cards Configuration - หลากหลายมากขึ้น
+  const allHourCards = [
+    {
+      id: "totalOT",
+      title: "รวมชั่วโมง OT",
+      value: "450h",
+      subtext: "+5% เมื่อเทียบเดือนก่อนหน้า",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-100",
+      textColor: "text-blue-600",
+      valueColor: "text-blue-800",
+      subTextColor: "text-blue-500",
+    },
+    {
+      id: "avgOT",
+      title: "ค่าเฉลี่ย OT ต่อพนักงาน",
+      value: "3.6h",
+      subtext: "-2% เมื่อเทียบเดือนก่อนหน้า",
+      bgColor: "bg-purple-50",
+      borderColor: "border-purple-100",
+      textColor: "text-purple-600",
+      valueColor: "text-purple-800",
+      subTextColor: "text-purple-500",
+    },
+    {
+      id: "maxOT",
+      title: "ชั่วโมง OT สูงสุด",
+      value: "4h ต่อพนักงาน",
+      subtext: "คำนวณจากอัตราเฉลี่ย",
+      bgColor: "bg-orange-50",
+      borderColor: "border-orange-100",
+      textColor: "text-orange-600",
+      valueColor: "text-orange-800",
+      subTextColor: "text-orange-500",
+    },
+    {
+      id: "totalWorkHours",
+      title: "รวมชั่วโมงทำงาน",
+      value: "4,960h",
+      subtext: "ชั่วโมงทำงานปกติทั้งหมด",
+      bgColor: "bg-green-50",
+      borderColor: "border-green-100",
+      textColor: "text-green-600",
+      valueColor: "text-green-800",
+      subTextColor: "text-green-500",
+    },
+    {
+      id: "avgWorkHours",
+      title: "ค่าเฉลี่ยชั่วโมงทำงาน",
+      value: "40h/สัปดาห์",
+      subtext: "ต่อพนักงาน 1 คน",
+      bgColor: "bg-teal-50",
+      borderColor: "border-teal-100",
+      textColor: "text-teal-600",
+      valueColor: "text-teal-800",
+      subTextColor: "text-teal-500",
+    },
+    {
+      id: "leaveHours",
+      title: "รวมชั่วโมงลางาน",
+      value: "120h",
+      subtext: "ลาป่วย, ลากิจ, ลาพักร้อน",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-100",
+      textColor: "text-amber-600",
+      valueColor: "text-amber-800",
+      subTextColor: "text-amber-500",
+    },
+    {
+      id: "trainingHours",
+      title: "รวมชั่วโมงอบรม",
+      value: "80h",
+      subtext: "+15% เมื่อเทียบเดือนก่อนหน้า",
+      bgColor: "bg-indigo-50",
+      borderColor: "border-indigo-100",
+      textColor: "text-indigo-600",
+      valueColor: "text-indigo-800",
+      subTextColor: "text-indigo-500",
+    },
+    {
+      id: "meetingHours",
+      title: "รวมชั่วโมงประชุม",
+      value: "200h",
+      subtext: "เฉลี่ย 1.6h ต่อพนักงาน",
+      bgColor: "bg-pink-50",
+      borderColor: "border-pink-100",
+      textColor: "text-pink-600",
+      valueColor: "text-pink-800",
+      subTextColor: "text-pink-500",
+    },
+    {
+      id: "otCost",
+      title: "ค่าใช้จ่าย OT",
+      value: "฿45,000",
+      subtext: "+8% เมื่อเทียบเดือนก่อนหน้า",
+      bgColor: "bg-red-50",
+      borderColor: "border-red-100",
+      textColor: "text-red-600",
+      valueColor: "text-red-800",
+      subTextColor: "text-red-500",
+    },
+  ];
+
+  // Icon mapping for stats cards
+  const iconMap = {
+    users: <UsersIcon className="w-6 h-6" />,
+    clock: <ClockIcon className="w-6 h-6" />,
+    calendar: <CalendarIcon className="w-6 h-6" />,
+    reports: <ReportsIcon className="w-6 h-6" />,
+  };
+
+  // Toggle stats card selection (max 4)
+  const toggleStatsCard = (cardId) => {
+    setSelectedStatsIds((prev) => {
+      if (prev.includes(cardId)) {
+        // ลบออก
+        return prev.filter((id) => id !== cardId);
+      } else if (prev.length < 4) {
+        // เพิ่มเข้าไป
+        return [...prev, cardId];
+      }
+      return prev; // ถ้าครบ 4 แล้ว ไม่ทำอะไร
+    });
+  };
+
+  // Toggle hour card selection (max 3)
+  const toggleHourCard = (cardId) => {
+    setSelectedHourIds((prev) => {
+      if (prev.includes(cardId)) {
+        // ลบออก
+        return prev.filter((id) => id !== cardId);
+      } else if (prev.length < 3) {
+        // เพิ่มเข้าไป
+        return [...prev, cardId];
+      }
+      return prev; // ถ้าครบ 3 แล้ว ไม่ทำอะไร
+    });
+  };
+
+  // Get selected stats cards in order
+  const selectedStatsCards = selectedStatsIds
+    .map((id) => allStatsCards.find((card) => card.id === id))
+    .filter(Boolean);
+
+  // Get selected hour cards in order
+  const selectedHourCards = selectedHourIds
+    .map((id) => allHourCards.find((card) => card.id === id))
+    .filter(Boolean);
 
   // Mock Data for Monthly Summary
   const monthlySummary = [
@@ -241,76 +485,67 @@ export function ReportPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatsCard
-          title="พนักงานทั้งหมด"
-          value="124"
-          icon={<UsersIcon className="w-6 h-6" />}
-          color="primary"
-          trend="up"
-          trendValue="4%"
-        />
-        <StatsCard
-          title="ค่าเฉลี่ยการเข้าทำงาน"
-          value="98.2%"
-          icon={<ClockIcon className="w-6 h-6" />}
-          color="success"
-          trend="up"
-          trendValue="1.2%"
-        />
-        <StatsCard
-          title="ชั่วโมงล่วงเวลาทั้งหมด"
-          value="450h"
-          icon={<CalendarIcon className="w-6 h-6" />}
-          color="warning"
-          trend="down"
-          trendValue="5%"
-        />
-        <StatsCard
-          title="การมาสาย"
-          value="12"
-          icon={<ReportsIcon className="w-6 h-6" />}
-          color="danger"
-          trend="down"
-          trendValue="2%"
-        />
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-text-main">ภาพรวมสถิติ</h2>
+          <button
+            onClick={() => setShowStatsSettings(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-sub hover:text-text-main hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <SettingsIcon className="w-4 h-4" />
+            ตั้งค่าการ์ด
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {selectedStatsCards.map((card) => (
+            <StatsCard
+              key={card.id}
+              title={card.title}
+              value={card.value}
+              icon={
+                <span className={`text-${card.color}`}>
+                  {React.cloneElement(iconMap[card.icon], {
+                    className: "w-4 h-4",
+                  })}
+                </span>
+              }
+              color={card.color}
+              trend={card.trend}
+              trendValue={card.trendValue}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* OT Summary Section */}
+      {/* Hour Summary Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="font-semibold text-text-main mb-4">
-          สรุปชั่วโมงล่วงเวลา
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-text-main">สรุปชั่วโมง</h2>
+          <button
+            onClick={() => setShowHourSettings(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-text-sub hover:text-text-main hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <SettingsIcon className="w-4 h-4" />
+            ตั้งค่าการ์ด
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="text-sm text-blue-600 font-medium">
-              รวมชั่วโมง OT
+          {selectedHourCards.map((card) => (
+            <div
+              key={card.id}
+              className={`p-4 ${card.bgColor} rounded-lg border ${card.borderColor}`}
+            >
+              <div className={`text-sm ${card.textColor} font-medium`}>
+                {card.title}
+              </div>
+              <div className={`text-2xl font-bold ${card.valueColor} mt-1`}>
+                {card.value}
+              </div>
+              <div className={`text-xs ${card.subTextColor} mt-1`}>
+                {card.subtext}
+              </div>
             </div>
-            <div className="text-2xl font-bold text-blue-800 mt-1">450h</div>
-            <div className="text-xs text-blue-500 mt-1">
-              +5% เมื่อเทียบเดือนก่อนหน้า
-            </div>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
-            <div className="text-sm text-purple-600 font-medium">
-              ค่าเฉลี่ย OT ต่อพนักงาน
-            </div>
-            <div className="text-2xl font-bold text-purple-800 mt-1">3.6h</div>
-            <div className="text-xs text-purple-500 mt-1">
-              -2% เมื่อเทียบเดือนก่อนหน้า
-            </div>
-          </div>
-          <div className="p-4 bg-orange-50 rounded-lg border border-orange-100">
-            <div className="text-sm text-orange-600 font-medium">
-              ค่าใช้จ่าย OT (ประมาณการ)
-            </div>
-            <div className="text-2xl font-bold text-orange-800 mt-1">
-              ฿45,000
-            </div>
-            <div className="text-xs text-orange-500 mt-1">
-              คำนวณจากอัตราเฉลี่ย
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -431,6 +666,194 @@ export function ReportPage() {
           </div>
         </div>
       </div>
+
+      {/* Stats Settings Modal */}
+      <Modal
+        isOpen={showStatsSettings}
+        onClose={() => setShowStatsSettings(false)}
+        title="ตั้งค่าการ์ดภาพรวมสถิติ"
+        size="lg"
+      >
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-text-sub">
+              เลือกการ์ด 4 รายการที่ต้องการแสดง (คลิกเพื่อเลือก/ยกเลิก)
+            </p>
+            <span
+              className={`text-sm font-medium px-2 py-1 rounded ${
+                selectedStatsIds.length === 4
+                  ? "bg-success/10 text-success"
+                  : "bg-warning/10 text-warning"
+              }`}
+            >
+              {selectedStatsIds.length}/4
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {allStatsCards.map((card) => {
+              const isSelected = selectedStatsIds.includes(card.id);
+              const order = selectedStatsIds.indexOf(card.id) + 1;
+              const isDisabled = !isSelected && selectedStatsIds.length >= 4;
+
+              const getButtonClass = () => {
+                if (isSelected)
+                  return `bg-${card.color}/5 border-${card.color} shadow-sm`;
+                if (isDisabled)
+                  return "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed";
+                // show subtle colored border when selectable but not selected
+                return `bg-white border-gray-200 hover:border-${card.color}-200 hover:shadow-sm`;
+              };
+
+              const getIconClass = () => {
+                if (isSelected)
+                  return `p-2 rounded-md bg-${card.color}/10 text-${card.color}`;
+                if (isDisabled)
+                  return "p-2 rounded-md bg-gray-100 text-gray-400";
+                // selectable but not selected -> show light color tone
+                return `p-2 rounded-md bg-${card.color}/5 text-${card.color}`;
+              };
+
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => toggleStatsCard(card.id)}
+                  disabled={isDisabled}
+                  className={`relative p-4 rounded-lg border-2 text-left transition-all ${getButtonClass()}`}
+                >
+                  {isSelected && (
+                    <span
+                      className={`absolute top-2 right-2 w-6 h-6 bg-${card.color} text-white text-xs font-bold rounded-full flex items-center justify-center`}
+                    >
+                      {order}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={getIconClass()}>
+                      {React.cloneElement(iconMap[card.icon], {
+                        className: "w-4 h-4",
+                      })}
+                    </div>
+                    <p className="font-medium text-text-main text-sm">
+                      {card.title}
+                    </p>
+                  </div>
+                  <p className="text-lg font-bold text-text-main">
+                    {card.value}
+                  </p>
+                  <p className="text-xs text-text-sub mt-1">
+                    {card.trend === "up" ? "↑" : "↓"} {card.trendValue}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+          {selectedStatsIds.length !== 4 && (
+            <p className="text-sm text-warning text-center">
+              กรุณาเลือกให้ครบ 4 การ์ด
+            </p>
+          )}
+        </div>
+      </Modal>
+
+      {/* Hour Settings Modal */}
+      <Modal
+        isOpen={showHourSettings}
+        onClose={() => setShowHourSettings(false)}
+        title="ตั้งค่าการ์ดสรุปชั่วโมง"
+        size="lg"
+      >
+        <div className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-text-sub">
+              เลือกการ์ด 3 รายการที่ต้องการแสดง (คลิกเพื่อเลือก/ยกเลิก)
+            </p>
+            <span
+              className={`text-sm font-medium px-2 py-1 rounded ${
+                selectedHourIds.length === 3
+                  ? "bg-success/10 text-success"
+                  : "bg-warning/10 text-warning"
+              }`}
+            >
+              {selectedHourIds.length}/3
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {allHourCards.map((card) => {
+              const isSelected = selectedHourIds.includes(card.id);
+              const order = selectedHourIds.indexOf(card.id) + 1;
+              const isDisabled = !isSelected && selectedHourIds.length >= 3;
+
+              const getButtonClass = () => {
+                if (isSelected)
+                  return `${card.bgColor} ${card.borderColor} border-2 shadow-sm`;
+                if (isDisabled)
+                  return "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed";
+                // selectable but not selected: subtle neutral border, color on hover
+                let hoverBase = "gray";
+                if (card.id.startsWith("total")) hoverBase = "blue";
+                else if (card.textColor)
+                  hoverBase = card.textColor.replace("text-", "");
+                return `bg-white border-gray-200 hover:border-${hoverBase}-200 hover:shadow-sm`;
+              };
+
+              const getTextClass = () => {
+                if (isDisabled) return "text-text-sub";
+                // show card color for available but not selected to aid UX
+                return card.textColor;
+              };
+
+              const getValueClass = () => {
+                if (isDisabled) return "text-text-main";
+                return card.valueColor;
+              };
+
+              return (
+                <button
+                  key={card.id}
+                  onClick={() => toggleHourCard(card.id)}
+                  disabled={isDisabled}
+                  className={`relative p-3 rounded-lg border-2 text-left transition-all ${getButtonClass()}`}
+                >
+                  {isSelected && (
+                    <span
+                      className={`${card.valueColor
+                        .replace("text-", "bg-")
+                        .replace(
+                          "-800",
+                          "-600"
+                        )} absolute top-2 right-2 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center`}
+                    >
+                      {order}
+                    </span>
+                  )}
+                  <p
+                    className={`font-medium text-sm ${
+                      isSelected ? card.textColor : getTextClass()
+                    }`}
+                  >
+                    {card.title}
+                  </p>
+                  <p
+                    className={`text-lg font-bold mt-1 ${
+                      isSelected ? card.valueColor : getValueClass()
+                    }`}
+                  >
+                    {card.value}
+                  </p>
+                  <p className="text-xs text-text-muted mt-1 truncate">
+                    {card.subtext}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+          {selectedHourIds.length !== 3 && (
+            <p className="text-sm text-warning text-center">
+              กรุณาเลือกให้ครบ 3 การ์ด
+            </p>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }
