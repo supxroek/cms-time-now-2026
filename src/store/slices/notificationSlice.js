@@ -31,8 +31,23 @@ const generateId = () => {
     return `notif_${Date.now()}_${hex}`;
   }
 
-  // Last resort fallback (non-cryptographic)
-  return `notif_${Date.now()}_${Math.random().toString(16).slice(2, 14)}`;
+  // Last resort fallback (non-cryptographic). This path is only used when
+  // crypto APIs are unavailable (very old environments). It is NOT
+  // cryptographically secure and must never be used for security-sensitive
+  // values. We combine several entropy sources and a simple FNV-1a hash to
+  // reduce collisions for IDs used purely for UI/visibility purposes.
+  const seed = `${Date.now()}_${
+    typeof performance !== "undefined" && performance.now
+      ? performance.now()
+      : 0
+  }_${Math.random()}`;
+  let hash = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.codePointAt(i);
+    hash = Math.imul(hash, 16777619) >>> 0;
+  }
+  const hex = (hash >>> 0).toString(16).padStart(8, "0");
+  return `notif_${Date.now()}_${hex}`;
 };
 
 const notificationSlice = createSlice({
