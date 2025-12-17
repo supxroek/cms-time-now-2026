@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+// Use browser-safe crypto APIs; avoid importing node:crypto which is externalized by Vite.
 
 /**
  * Notification Types
@@ -14,9 +15,25 @@ const initialState = {
   maxNotifications: 5, // จำนวนสูงสุดที่แสดงพร้อมกัน
 };
 
-// สร้าง unique ID สำหรับแต่ละ notification
-const generateId = () =>
-  `notif_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+// สร้าง unique ID สำหรับแต่ละ notification (ใช้ CSPRNG แทน Math.random())
+const generateId = () => {
+  // Prefer crypto.randomUUID if available (modern browsers)
+  if (typeof globalThis?.crypto?.randomUUID === "function") {
+    return `notif_${Date.now()}_${globalThis.crypto.randomUUID()}`;
+  }
+
+  // Fallback to getRandomValues for random hex
+  if (typeof globalThis?.crypto?.getRandomValues === "function") {
+    const bytes = globalThis.crypto.getRandomValues(new Uint8Array(6));
+    const hex = Array.from(bytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return `notif_${Date.now()}_${hex}`;
+  }
+
+  // Last resort fallback (non-cryptographic)
+  return `notif_${Date.now()}_${Math.random().toString(16).slice(2, 14)}`;
+};
 
 const notificationSlice = createSlice({
   name: "notification",

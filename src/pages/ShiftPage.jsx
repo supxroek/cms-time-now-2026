@@ -95,6 +95,33 @@ export function ShiftPage() {
     return [];
   };
 
+  // Helpers to reduce cognitive complexity in handleSubmit
+  const getFinalEmployeeIds = (form) => {
+    let finalEmployeeIds = form.employeeId || [];
+    if (form.assign_type === "department" && form.departmentId?.length > 0) {
+      const deptEmployees = (employees || [])
+        .filter((emp) => form.departmentId.includes(emp.departmentId))
+        .map((emp) => emp.id);
+      finalEmployeeIds = [...new Set([...finalEmployeeIds, ...deptEmployees])];
+    }
+    return finalEmployeeIds;
+  };
+
+  const buildShiftPayload = (form, finalEmployeeIds) => ({
+    shift_name: form.name,
+    start_time: form.start_time,
+    end_time: form.end_time,
+    date: form.work_days,
+    is_break: form.break_enabled ? 1 : 0,
+    break_start_time: form.break_enabled ? form.break_start_time : null,
+    break_end_time: form.break_enabled ? form.break_end_time : null,
+    employeeId: finalEmployeeIds,
+    is_shift: form.is_active ? 1 : 0,
+    is_night_shift: form.ot_enabled ? 1 : 0,
+    is_specific: form.is_specific ? 1 : 0,
+    month: form.is_specific ? form.month : null,
+  });
+
   const handleOpenModal = (shift = null) => {
     setSearchTerm(""); // Reset search term
 
@@ -166,37 +193,8 @@ export function ShiftPage() {
 
   const handleSubmit = async () => {
     try {
-      // Logic to handle department assignment -> convert to employeeIds if needed
-      let finalEmployeeIds = formData.employeeId;
-      if (
-        formData.assign_type === "department" &&
-        formData.departmentId.length > 0
-      ) {
-        // Filter employees by selected departments
-        const deptEmployees = employees
-          .filter((emp) => formData.departmentId.includes(emp.departmentId))
-          .map((emp) => emp.id);
-        finalEmployeeIds = [
-          ...new Set([...finalEmployeeIds, ...deptEmployees]),
-        ];
-      }
-
-      const payload = {
-        shift_name: formData.name,
-        start_time: formData.start_time,
-        end_time: formData.end_time,
-        date: formData.work_days,
-        is_break: formData.break_enabled ? 1 : 0,
-        break_start_time: formData.break_enabled
-          ? formData.break_start_time
-          : null,
-        break_end_time: formData.break_enabled ? formData.break_end_time : null,
-        employeeId: finalEmployeeIds,
-        is_shift: formData.is_active ? 1 : 0, // Map is_active to is_shift
-        is_night_shift: formData.ot_enabled ? 1 : 0, // Map ot_enabled to is_night_shift
-        is_specific: formData.is_specific ? 1 : 0,
-        month: formData.is_specific ? formData.month : null,
-      };
+      const finalEmployeeIds = getFinalEmployeeIds(formData);
+      const payload = buildShiftPayload(formData, finalEmployeeIds);
 
       if (editingShift) {
         await dispatch(
