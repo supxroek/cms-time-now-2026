@@ -144,6 +144,10 @@ PieChart.propTypes = {
   colors: Array,
 };
 
+// LocalStorage keys to persist selected card IDs and their order
+const STATS_STORAGE_KEY = "report:selectedStatsIds";
+const HOURS_STORAGE_KEY = "report:selectedHourIds";
+
 export function ReportPage() {
   const dispatch = useDispatch();
 
@@ -193,19 +197,55 @@ export function ReportPage() {
   };
 
   // Stats cards - ต้องเลือก 4 อันเสมอ (เก็บเป็น array ของ id ที่เลือก)
-  const [selectedStatsIds, setSelectedStatsIds] = useState([
+  const STATS_DEFAULT = [
     "totalEmployees",
     "avgAttendance",
     "totalOvertime",
     "avgLate",
-  ]);
+  ];
 
   // Hour summary cards - ต้องเลือก 3 อันเสมอ
-  const [selectedHourIds, setSelectedHourIds] = useState([
-    "totalOT",
-    "avgOT",
-    "maxOT",
-  ]);
+  const HOURS_DEFAULT = ["totalOT", "avgOT", "maxOT"];
+
+  // Initialize from localStorage if available to remember selection + order
+  const [selectedStatsIds, setSelectedStatsIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem(STATS_STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      // ignore parse errors
+      console.error(e);
+    }
+    return STATS_DEFAULT;
+  });
+
+  const [selectedHourIds, setSelectedHourIds] = useState(() => {
+    try {
+      const raw = localStorage.getItem(HOURS_STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      // ignore parse errors
+      console.error(e);
+    }
+    return HOURS_DEFAULT;
+  });
+
+  // Keep localStorage in sync if other code updates these arrays
+  useEffect(() => {
+    try {
+      localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(selectedStatsIds));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [selectedStatsIds]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HOURS_STORAGE_KEY, JSON.stringify(selectedHourIds));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [selectedHourIds]);
 
   // Available Stats Cards Configuration - ใช้ค่าจาก API
   const allStatsCards = [
@@ -397,28 +437,44 @@ export function ReportPage() {
   // Toggle stats card selection (max 4)
   const toggleStatsCard = (cardId) => {
     setSelectedStatsIds((prev) => {
+      let next;
       if (prev.includes(cardId)) {
         // ลบออก
-        return prev.filter((id) => id !== cardId);
+        next = prev.filter((id) => id !== cardId);
       } else if (prev.length < 4) {
-        // เพิ่มเข้าไป
-        return [...prev, cardId];
+        // เพิ่มเข้าไป (append -> preserves ordering)
+        next = [...prev, cardId];
+      } else {
+        next = prev; // ถ้าครบ 4 แล้ว ไม่ทำอะไร
       }
-      return prev; // ถ้าครบ 4 แล้ว ไม่ทำอะไร
+      try {
+        localStorage.setItem(STATS_STORAGE_KEY, JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
     });
   };
 
   // Toggle hour card selection (max 3)
   const toggleHourCard = (cardId) => {
     setSelectedHourIds((prev) => {
+      let next;
       if (prev.includes(cardId)) {
         // ลบออก
-        return prev.filter((id) => id !== cardId);
+        next = prev.filter((id) => id !== cardId);
       } else if (prev.length < 3) {
-        // เพิ่มเข้าไป
-        return [...prev, cardId];
+        // เพิ่มเข้าไป (append -> preserves ordering)
+        next = [...prev, cardId];
+      } else {
+        next = prev; // ถ้าครบ 3 แล้ว ไม่ทำอะไร
       }
-      return prev; // ถ้าครบ 3 แล้ว ไม่ทำอะไร
+      try {
+        localStorage.setItem(HOURS_STORAGE_KEY, JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
     });
   };
 
