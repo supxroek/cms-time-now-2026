@@ -161,7 +161,7 @@ export function DashboardPage() {
   // แสดง Loading state
   if (isLoading && !stats.totalEmployees) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="text-center">
           <SyncIcon className="w-8 h-8 text-primary animate-spin mx-auto mb-2" />
           <p className="text-text-sub">กำลังโหลดข้อมูล...</p>
@@ -173,7 +173,7 @@ export function DashboardPage() {
   // แสดง Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="text-center">
           <p className="text-danger mb-2">เกิดข้อผิดพลาด: {error}</p>
           <Button onClick={() => dispatch(fetchDashboardData())}>
@@ -249,7 +249,7 @@ export function DashboardPage() {
       {/* Top Section: Live Activity & Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Live Activity */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col h-[500px]">
+        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col h-125">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <SyncIcon
@@ -437,7 +437,7 @@ export function DashboardPage() {
               <span className="ml-2 text-text-sub">กำลังโหลด...</span>
             </div>
           ) : (
-            <table className="w-full min-w-[1000px]">
+            <table className="w-full min-w-250">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-text-sub uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
