@@ -8,14 +8,14 @@ import {
   ClockIcon,
   FileTextIcon,
   RequestsIcon,
+  ResendIcon,
 } from "../components/atoms/Icons";
 import {
   fetchPendingRequests,
   fetchRequestHistory,
   fetchRequestStats,
-  approveRequest,
-  rejectRequest,
 } from "../store/slices/requestSlice";
+import { apiPost } from "../services/api";
 import { Modal } from "../components/molecules/Modal";
 import { Button } from "../components/atoms/Button";
 import { Input } from "../components/atoms/Input";
@@ -48,17 +48,15 @@ export function RequestPage() {
     stats,
     loading,
     historyLoading,
-    actionLoading,
   } = useSelector((state) => state.requests);
   const { success, error: showError } = useNotification();
   const [activeTab, setActiveTab] = useState("pending"); // 'pending' | 'history'
   const [filterType, setFilterType] = useState("ทุกประเภท");
   const [selectedEvidence, setSelectedEvidence] = useState(null);
-  const [confirmModal, setConfirmModal] = useState({
-    isOpen: false,
-    type: null, // 'approve' | 'reject'
-    id: null,
-  });
+
+  // Resend rate-limit state (map: request_id -> timestamp ms)
+  const [lastResend, setLastResend] = useState({});
+  const [resendingId, setResendingId] = useState(null);
 
   // History Filters
   const [historyFilters, setHistoryFilters] = useState(initialHistoryFilters);
@@ -83,43 +81,50 @@ export function RequestPage() {
     return matchType;
   });
 
-  const handleApprove = (id) => {
-    setConfirmModal({ isOpen: true, type: "approve", id });
-  };
+  // Replace approve/reject with resend notification
+  const handleResend = async (req) => {
+    const id = req.request_id || req.id;
+    const now = Date.now();
+    const last = lastResend[id];
 
-  const handleReject = (id) => {
-    setConfirmModal({ isOpen: true, type: "reject", id });
-  };
+    // Limit to 1 resend per hour
+    if (last && now - last < 3600000) {
+      const minsLeft = Math.ceil((3600000 - (now - last)) / 60000);
+      showError("จำกัดการส่งซ้ำ", `คุณสามารถส่งได้อีกครั้งใน ${minsLeft} นาที`);
+      return;
+    }
 
-  const executeConfirmAction = async () => {
     try {
-      if (confirmModal.type === "approve") {
-        await dispatch(approveRequest(confirmModal.id)).unwrap();
-        success("อนุมัติสำเร็จ", "อนุมัติคำขอเรียบร้อยแล้ว");
-      } else if (confirmModal.type === "reject") {
-        await dispatch(rejectRequest(confirmModal.id)).unwrap();
-        success("ปฏิเสธสำเร็จ", "ปฏิเสธคำขอเรียบร้อยแล้ว");
-      }
-      setConfirmModal({ isOpen: false, type: null, id: null });
-      // Refresh pending list
+      setResendingId(id);
+      // backend endpoint assumed: POST /requests/:id/resend
+      await apiPost(`/requests/${id}/resend`);
+      setLastResend((prev) => ({ ...prev, [id]: Date.now() }));
+      success("ส่งแจ้งเตือนแล้ว", "ระบบได้ส่งอีเมลแจ้งเตือนซ้ำแล้ว");
       dispatch(fetchPendingRequests());
       dispatch(fetchRequestStats());
-    } catch (error) {
-      console.error("Failed to process request:", error);
+    } catch (err) {
+      console.error("Resend failed:", err);
       showError(
-        confirmModal.type === "approve"
-          ? "อนุมัติไม่สำเร็จ"
-          : "ปฏิเสธไม่สำเร็จ",
-        typeof error === "string"
-          ? error
-          : error?.message || "ไม่สามารถดำเนินการคำขอได้"
+        "ส่งแจ้งเตือนไม่สำเร็จ",
+        err?.message || "ไม่สามารถส่งอีเมลได้ กรุณาลองใหม่"
       );
-      setConfirmModal({ isOpen: false, type: null, id: null });
+    } finally {
+      setResendingId(null);
     }
   };
 
   const handleHistoryFilterChange = (key, value) => {
     setHistoryFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const getNextRecipient = (req) => {
+    // Best-effort resolution of the next recipient name/role for tooltip
+    if (req.next_approver_name) return req.next_approver_name;
+    if (req.next_approver_role) return req.next_approver_role;
+    if (req.headDep_name) return req.headDep_name;
+    if (req.hr_name) return `HR: ${req.hr_name}`;
+    if (req.departmentName) return req.departmentName;
+    return "ผู้รับผิดชอบถัดไป";
   };
 
   const renderTableBody = () => {
@@ -182,22 +187,15 @@ export function RequestPage() {
         </td>
         <td className="px-6 py-4 text-right">
           {req.status === "pending" && (
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-center gap-2">
               <button
-                onClick={() => handleApprove(req.request_id)}
-                disabled={actionLoading === req.request_id}
-                className="p-1 text-success hover:bg-success/10 hover:cursor-pointer rounded transition-colors disabled:opacity-50"
-                title="อนุมัติ"
+                onClick={() => handleResend(req)}
+                disabled={resendingId === (req.request_id || req.id)}
+                className="p-1 text-primary hover:bg-primary/10 hover:cursor-pointer rounded transition-colors disabled:opacity-50"
+                title={getNextRecipient(req)}
+                aria-label="ส่งแจ้งเตือนซ้ำ"
               >
-                <UserCheckIcon className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleReject(req.request_id)}
-                disabled={actionLoading === req.request_id}
-                className="p-1 text-danger hover:bg-danger/10 hover:cursor-pointer rounded transition-colors disabled:opacity-50"
-                title="ปฏิเสธ"
-              >
-                <UserXIcon className="w-5 h-5" />
+                <ResendIcon className="w-5 h-5" />
               </button>
             </div>
           )}
@@ -496,40 +494,7 @@ export function RequestPage() {
         )}
       </div>
 
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, type: null, id: null })}
-        title={
-          confirmModal.type === "approve"
-            ? "ยืนยันการอนุมัติ"
-            : "ยืนยันการปฏิเสธ"
-        }
-      >
-        <div className="p-6">
-          <p className="text-text-main mb-6">
-            {confirmModal.type === "approve"
-              ? "คุณต้องการอนุมัติคำขอนี้ใช่หรือไม่?"
-              : "คุณต้องการปฏิเสธคำขอนี้ใช่หรือไม่?"}
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="ghost"
-              onClick={() =>
-                setConfirmModal({ isOpen: false, type: null, id: null })
-              }
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              variant={confirmModal.type === "approve" ? "primary" : "danger"}
-              onClick={executeConfirmAction}
-            >
-              ยืนยัน
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      {/* Confirmation Modal removed: approve/reject replaced by resend action */}
 
       {/* Evidence Modal */}
       <Modal

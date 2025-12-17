@@ -1,6 +1,8 @@
 import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { fetchCompanyInfo } from "../store/slices/companySlice";
 import { UserProfile } from "../components/molecules/UserProfile";
 import { Button } from "../components/atoms/Button";
 import { isTokenExpired } from "../utils/authUtils";
@@ -39,12 +41,19 @@ const MenuIcon = ({ name }) => {
 export function MainLayout() {
   const { user, logout, token } = useAuth();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const company = useSelector((state) => state.company.companyInfo);
 
   useEffect(() => {
     if (token && isTokenExpired(token)) {
       logout();
     }
   }, [token, logout, location]);
+
+  // Load company info (so branch is available)
+  useEffect(() => {
+    dispatch(fetchCompanyInfo());
+  }, [dispatch]);
 
   const menuItems = [
     { name: "Dashboard", path: "/dashboard" },
@@ -89,8 +98,8 @@ export function MainLayout() {
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-xs text-text-muted mb-2">Logged in as</p>
             <UserProfile
-              name={user?.email || "User"}
-              role={user?.role || "Admin"}
+              name={user?.email || "User Name"}
+              role={"Branch: " + (company?.branch || "N/A")}
               avatarUrl={user?.avatar}
               size="sm"
             />

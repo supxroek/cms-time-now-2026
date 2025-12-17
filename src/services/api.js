@@ -387,3 +387,24 @@ export const parseApiError = (error) => {
 // ===== EXPORT API CLIENT =====
 export { apiClient };
 export default apiClient;
+
+// ===== Convenience API helpers for auth flows =====
+/**
+ * Request password reset - sends reset link to email
+ * @param {{email: string}} payload
+ */
+export const requestPasswordReset = async (payload) => {
+  // endpoint assumed: POST /auth/forgot-password
+  const res = await apiPost("/auth/forgot-password", payload);
+  return res;
+};
+
+/**
+ * Reset password using token (or data object)
+ * @param {{token?: string, password: string}} payload
+ */
+export const resetPassword = async (payload) => {
+  // endpoint assumed: POST /auth/reset-password
+  const res = await apiPost("/auth/reset-password", payload);
+  return res;
+};

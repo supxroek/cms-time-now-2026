@@ -3,6 +3,7 @@ import { useAuth } from "../hooks/useAuth";
 import { FormField } from "../components/molecules/FormField";
 import { Button } from "../components/atoms/Button";
 import { validate, loginSchema } from "../utils/validators";
+import { ForgotPasswordModal } from "../components/molecules/ForgotPasswordModal";
 
 export function LoginPage() {
   const { login, isLoading, error: authError } = useAuth();
@@ -13,6 +14,7 @@ export function LoginPage() {
   });
 
   const [errors, setErrors] = useState({});
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,7 +46,11 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-        <img className="mx-auto mb-6 w-24 h-24" src="/src/assets/clock.png" alt="Time Now Logo" />
+        <img
+          className="mx-auto mb-6 w-24 h-24"
+          src="/src/assets/clock.png"
+          alt="Time Now Logo"
+        />
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-primary mb-2">Time Now</h1>
           <p className="text-text-muted">ลงชื่อเข้าใช้เพื่อจัดการเวลาเข้างาน</p>
@@ -84,12 +90,13 @@ export function LoginPage() {
           />
 
           <div className="flex justify-end">
-            <a
-              href="/forgot-password"
+            <button
+              type="button"
+              onClick={() => setIsForgotOpen(true)}
               className="text-sm font-medium text-primary hover:text-primary-hover hover:underline transition-colors"
             >
               ลืมรหัสผ่าน?
-            </a>
+            </button>
           </div>
 
           <Button
@@ -101,6 +108,10 @@ export function LoginPage() {
           </Button>
         </form>
       </div>
+      <ForgotPasswordModal
+        isOpen={isForgotOpen}
+        onClose={() => setIsForgotOpen(false)}
+      />
     </div>
   );
 }

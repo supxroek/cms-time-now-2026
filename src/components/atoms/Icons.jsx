@@ -1,5 +1,7 @@
 import PropTypes from "prop-types";
 
+import resendIcon from "../../assets/resend.png"
+
 export const UsersIcon = ({ className = "w-6 h-6" }) => (
   <svg
     className={className}
@@ -350,6 +352,8 @@ export const CheckIcon = ({ className = "w-6 h-6" }) => (
   </svg>
 );
 
+export const ResendIcon = ({ className = "w-6 h-6" }) => <img src={resendIcon} alt="Resend Icon" className={className} />;
+
 /* shared propTypes for all icon components */
 const iconPropTypes = {
   className: PropTypes.string,
@@ -376,3 +380,4 @@ FileTextIcon.propTypes = iconPropTypes;
 PauseIcon.propTypes = iconPropTypes;
 SettingsIcon.propTypes = iconPropTypes;
 CheckIcon.propTypes = iconPropTypes;
+ResendIcon.propTypes = iconPropTypes;

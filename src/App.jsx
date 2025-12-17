@@ -6,6 +6,7 @@ import {
   Outlet,
 } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { CompanyPage } from "./pages/CompanyPage";
 import { EmployeePage } from "./pages/EmployeePage";
@@ -68,6 +69,11 @@ function App() {
           {/* Public Routes (เข้าได้เฉพาะตอนยังไม่ Login) */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route
+              path="/reset-password/:token"
+              element={<ResetPasswordPage />}
+            />
           </Route>
 
           {/* Protected Routes (ต้อง Login ก่อน) */}
