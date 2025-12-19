@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Outlet, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -43,6 +43,7 @@ export function MainLayout() {
   const location = useLocation();
   const dispatch = useDispatch();
   const company = useSelector((state) => state.company.companyInfo);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (token && isTokenExpired(token)) {
@@ -65,19 +66,79 @@ export function MainLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Mobile Header */}
+      <div className="xl:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-30">
+        <div className="flex items-center gap-2">
+          <img className="w-6 h-6" src="/src/assets/clock.png" alt="Clock" />
+          <span className="text-xl font-bold text-primary">Time Now</span>
+        </div>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="text-gray-500 hover:text-primary focus:outline-none"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Overlay */}
+      {isSidebarOpen && (
+        <button
+          type="button"
+          className="fixed inset-0 bg-black/50 z-40 xl:hidden w-full h-full cursor-default"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close sidebar"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10">
-        <div className="p-6 border-b border-gray-100">
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col h-full transform transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } xl:translate-x-0`}
+      >
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
             <img className="w-6 h-6" src="/src/assets/clock.png" alt="Clock" />
             <span>Time Now</span>
           </h1>
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="xl:hidden text-gray-500 hover:text-primary focus:outline-none"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {menuItems.map((item) => (
             <NavLink
+              onClick={() => setIsSidebarOpen(false)}
               key={item.name}
               to={item.path}
               className={({ isActive }) =>
@@ -116,8 +177,8 @@ export function MainLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
-        <div className="max-w-7xl mx-auto animate-fade-in">
+      <main className="flex-1 xl:ml-64 p-4 md:p-8 transition-all duration-300">
+        <div className="w-full xl:max-w-7xl mx-auto animate-fade-in">
           <Outlet />
         </div>
       </main>

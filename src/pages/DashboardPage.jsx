@@ -188,26 +188,26 @@ export function DashboardPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-lg text-primary">
+        <div className="hidden md:block p-2 bg-primary/10 rounded-lg text-primary">
           <DashboardIcon className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-text-main font-display">
+          <h2 className="text-xl md:text-2xl font-bold text-text-main font-display">
             ตรวจสอบการเข้างาน
           </h2>
-          <p className="text-text-sub text-sm">
+          <p className="text-text-sub text-xs md:text-sm">
             ดูประวัติการบันทึกเวลาเข้า-ออกงานของพนักงาน
           </p>
         </div>
-        <div className="ml-auto text-sm text-text-sub font-mono">
-          <div className="text-3xl font-bold text-primary font-mono tracking-tight leading-none">
+        <div className="ml-auto text-right text-sm text-text-sub font-mono">
+          <div className="text-lg md:text-3xl font-bold text-primary font-mono tracking-tight leading-none">
             {currentTime.toLocaleTimeString("th-TH", {
               hour: "2-digit",
               minute: "2-digit",
               second: "2-digit",
             })}
           </div>
-          <div className="text-sm text-text-sub mt-1 font-medium">
+          <div className="text-xs md:text-sm text-text-sub mt-1 font-medium">
             {currentTime.toLocaleDateString("th-TH", {
               weekday: "long",
               day: "numeric",
@@ -219,37 +219,37 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
         <StatsCard
           title="พนักงานทั้งหมด"
           value={stats.totalEmployees?.toString() || "0"}
-          icon={<UserCheckIcon className="w-6 h-6" />}
+          icon={<UserCheckIcon className="w-4 h-4 md:w-6 md:h-6" />}
           color="primary"
         />
         <StatsCard
           title="เข้างานตรงเวลา"
           value={stats.onTimeCount?.toString() || "0"}
-          icon={<ClockIcon className="w-6 h-6" />}
+          icon={<ClockIcon className="w-4 h-4 md:w-6 md:h-6" />}
           color="success"
         />
         <StatsCard
           title="เข้างานสาย"
           value={stats.lateCount?.toString() || "0"}
-          icon={<ReportsIcon className="w-6 h-6" />}
+          icon={<ReportsIcon className="w-4 h-4 md:w-6 md:h-6" />}
           color="warning"
         />
         <StatsCard
           title="ขาดงาน/ลา"
           value={stats.absentCount?.toString() || "0"}
-          icon={<UserXIcon className="w-6 h-6" />}
+          icon={<UserXIcon className="w-4 h-4 md:w-6 md:h-6" />}
           color="danger"
         />
       </div>
 
       {/* Top Section: Live Activity & Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {/* Left: Live Activity */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col h-125">
+        <div className="lg:col-span-2 xl:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col h-125 lg:h-150">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <SyncIcon
@@ -262,7 +262,7 @@ export function DashboardPage() {
               </h3>
             </div>
             <span className="text-xs text-text-sub bg-gray-100 px-2 py-1 rounded-full">
-              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-full text-xs font-medium animate-pulse">
+              <div className="flex items-center gap-2 px-2 py-1 bg-red-50 text-red-600 rounded-full text-xs font-medium animate-pulse">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                 LIVE
               </div>
@@ -278,10 +278,10 @@ export function DashboardPage() {
               recentActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-4 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${getActivityColor(
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${getActivityColor(
                       activity.type
                     )}`}
                   >
@@ -381,7 +381,7 @@ export function DashboardPage() {
 
       {/* Bottom Section: Daily Attendance Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-bold text-text-main">
@@ -440,7 +440,7 @@ export function DashboardPage() {
             <table className="w-full min-w-250">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-text-sub uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-text-sub uppercase tracking-wider md:sticky left-0 bg-gray-50 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     พนักงาน
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-text-sub uppercase tracking-wider">
@@ -467,7 +467,7 @@ export function DashboardPage() {
                   <th className="px-4 py-3 text-center text-xs font-medium text-text-sub uppercase tracking-wider">
                     สถานะ
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-text-sub uppercase tracking-wider sticky right-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-text-sub uppercase tracking-wider md:sticky right-0 bg-gray-50 z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                     จัดการ
                   </th>
                 </tr>
@@ -475,7 +475,7 @@ export function DashboardPage() {
               <tbody className="divide-y divide-gray-200">
                 {attendanceRecords.map((record) => (
                   <tr key={record.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap sticky left-0 bg-white z-10">
+                    <td className="px-4 py-3 whitespace-nowrap md:sticky left-0 bg-white z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center gap-3">
                         <Avatar
                           src={record.user?.avatar}
@@ -516,7 +516,7 @@ export function DashboardPage() {
                     <td className="px-4 py-3 whitespace-nowrap text-center">
                       <StatusBadge status={record.status} />
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white z-10">
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium md:sticky right-0 bg-white z-20 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       <button
                         className="text-primary hover:text-primary-hover"
                         onClick={() => handleViewEmployee(record)}
@@ -667,7 +667,6 @@ export function DashboardPage() {
                   {selectedEmployee.user?.name || "ไม่ทราบชื่อ"}
                 </h3>
                 <p className="text-text-sub">
-                  {selectedEmployee.user?.role || "-"} •{" "}
                   {selectedEmployee.user?.department || "-"}
                 </p>
                 <div className="mt-2">
