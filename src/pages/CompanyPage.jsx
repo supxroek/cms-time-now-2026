@@ -997,7 +997,7 @@ function DevicesSection({
               <th className="px-4 py-3">Location URL</th>
               <th className="px-4 py-3">Passcode</th>
               {hasDeviceStatus && <th className="px-4 py-3">สถานะ</th>}
-              <th className="px-4 py-3 text-center">สิทธิ์การเข้าถึง</th>
+              <th className="px-4 py-3">สิทธิ์การเข้าถึง</th>
               <th className="px-4 py-3 rounded-tr-lg text-right">จัดการ</th>
             </tr>
           </thead>
