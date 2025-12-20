@@ -40,7 +40,7 @@ import PropTypes from "prop-types";
 const TabButton = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+    className={`px-3 md:px-6 py-4 text-sm font-medium transition-colors border-b-2 ${
       active
         ? "border-primary text-primary"
         : "border-transparent text-text-sub hover:text-text-main hover:border-gray-300"
@@ -59,7 +59,7 @@ TabButton.propTypes = {
 // จัดการแถวแสดงข้อมูล
 const InfoRow = ({ label, value }) => (
   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-3 border-b border-gray-100 last:border-0">
-    <dt className="text-sm font-medium text-text-sub">{label}</dt>
+    <dt className="text-sm font-black text-text-sub">{label}</dt>
     <dd className="text-sm text-text-main sm:col-span-2">{value || "-"}</dd>
   </div>
 );
@@ -70,7 +70,7 @@ InfoRow.propTypes = {
 };
 
 // ========================================================================
-// ========================= ส่วนจัดการ logic ของหน้าจัดการองค์กร ================
+// ========================= ส่วนจัดการ logic ของหน้าจัดการบริษัท ================
 // ========================================================================
 function useCompanyLogic() {
   const dispatch = useDispatch();
@@ -738,7 +738,7 @@ function InfoSection({
   return (
     <div className="space-y-8">
       <div>
-        <h4 className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider font-display">
+        <h4 className="text-md font-semibold text-primary mb-3 uppercase tracking-wider font-display">
           ข้อมูลทั่วไป
         </h4>
         <dl>
@@ -761,7 +761,7 @@ function InfoSection({
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider font-display">
+        <h4 className="text-md font-semibold text-primary mb-3 uppercase tracking-wider font-display">
           ข้อมูลการติดต่อ
         </h4>
         <dl>
@@ -780,7 +780,7 @@ function InfoSection({
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-primary mb-3 uppercase tracking-wider font-display">
+        <h4 className="text-md font-semibold text-primary mb-3 uppercase tracking-wider font-display">
           ข้อมูลฝ่ายบุคคล
         </h4>
         <dl>
@@ -835,12 +835,12 @@ function DepartmentsSection({
 }) {
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
           <h3 className="text-lg font-semibold text-text-main font-display">
             รายชื่อแผนก
           </h3>
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-200 w-full sm:w-auto justify-between sm:justify-start">
             <span className="text-sm text-text-sub">
               {isTogglingDepartment ? "กำลังอัปเดต..." : "ใช้งานระบบแผนก"}
             </span>
@@ -854,6 +854,7 @@ function DepartmentsSection({
         <Button
           onClick={() => openDeptModal("add")}
           disabled={companyInfo?.hasDepartment === 0}
+          className="w-full sm:w-auto"
         >
           เพิ่มแผนก
         </Button>
@@ -869,30 +870,34 @@ function DepartmentsSection({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-text-sub font-semibold">
-              <th className="px-4 py-3 rounded-tl-lg">ชื่อแผนก</th>
-              <th className="px-4 py-3">หัวหน้าแผนก</th>
-              <th className="px-4 py-3">อีเมล</th>
-              <th className="px-4 py-3">เบอร์โทรศัพท์</th>
-              <th className="px-4 py-3 rounded-tr-lg text-right">จัดการ</th>
+              <th className="px-4 py-3 rounded-tl-lg whitespace-nowrap">
+                ชื่อแผนก
+              </th>
+              <th className="px-4 py-3 whitespace-nowrap">หัวหน้าแผนก</th>
+              <th className="px-4 py-3 whitespace-nowrap">อีเมล</th>
+              <th className="px-4 py-3 whitespace-nowrap">เบอร์โทรศัพท์</th>
+              <th className="px-4 py-3 rounded-tr-lg text-right whitespace-nowrap">
+                จัดการ
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {departments?.filter(Boolean).length > 0 ? (
               departments.filter(Boolean).map((dept, index) => (
                 <tr key={dept.id || index} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-text-main">
+                  <td className="px-4 py-3 font-medium text-text-main whitespace-nowrap">
                     {dept.departmentName}
                   </td>
-                  <td className="px-4 py-3 text-text-sub">
+                  <td className="px-4 py-3 text-text-sub whitespace-nowrap">
                     {dept.headDep_name || "-"}
                   </td>
-                  <td className="px-4 py-3 text-text-sub">
+                  <td className="px-4 py-3 text-text-sub whitespace-nowrap">
                     {dept.headDep_email || "-"}
                   </td>
-                  <td className="px-4 py-3 text-text-sub">
+                  <td className="px-4 py-3 text-text-sub whitespace-nowrap">
                     {dept.headDep_tel || "-"}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => openDeptModal("edit", dept)}
@@ -976,13 +981,14 @@ function DevicesSection({
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h3 className="text-lg font-semibold text-text-main font-display">
           รายการอุปกรณ์
         </h3>
         <Button
           onClick={() => openDeviceModal("add")}
           icon={<DevicesIcon className="w-4 h-4" />}
+          className="w-full sm:w-auto"
         >
           ลงทะเบียนอุปกรณ์
         </Button>
@@ -992,26 +998,32 @@ function DevicesSection({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-text-sub font-semibold">
-              <th className="px-4 py-3 rounded-tl-lg">ชื่ออุปกรณ์</th>
-              <th className="px-4 py-3">HWID</th>
-              <th className="px-4 py-3">Location URL</th>
-              <th className="px-4 py-3">Passcode</th>
-              {hasDeviceStatus && <th className="px-4 py-3">สถานะ</th>}
-              <th className="px-4 py-3">สิทธิ์การเข้าถึง</th>
-              <th className="px-4 py-3 rounded-tr-lg text-right">จัดการ</th>
+              <th className="px-4 py-3 rounded-tl-lg whitespace-nowrap">
+                ชื่ออุปกรณ์
+              </th>
+              <th className="px-4 py-3 whitespace-nowrap">HWID</th>
+              <th className="px-4 py-3 whitespace-nowrap">Location URL</th>
+              <th className="px-4 py-3 whitespace-nowrap">Passcode</th>
+              {hasDeviceStatus && (
+                <th className="px-4 py-3 whitespace-nowrap">สถานะ</th>
+              )}
+              <th className="px-4 py-3 whitespace-nowrap">สิทธิ์การเข้าถึง</th>
+              <th className="px-4 py-3 rounded-tr-lg text-right whitespace-nowrap">
+                จัดการ
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {Array.isArray(devices) && devices.some(Boolean) ? (
               devices.filter(Boolean).map((device, index) => (
                 <tr key={device.id || index} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-text-main">
+                  <td className="px-4 py-3 font-medium text-text-main whitespace-nowrap">
                     {device.name}
                   </td>
-                  <td className="px-4 py-3 text-text-sub font-mono text-xs">
+                  <td className="px-4 py-3 text-text-sub font-mono text-xs whitespace-nowrap">
                     {device.hwid}
                   </td>
-                  <td className="px-4 py-3 text-text-sub text-sm truncate max-w-xs">
+                  <td className="px-4 py-3 text-text-sub text-sm truncate max-w-xs whitespace-nowrap">
                     <a
                       href={device.locationURL}
                       target="_blank"
@@ -1021,11 +1033,11 @@ function DevicesSection({
                       {device.locationURL}
                     </a>
                   </td>
-                  <td className="px-4 py-3 text-text-sub font-mono text-xs">
+                  <td className="px-4 py-3 text-text-sub font-mono text-xs whitespace-nowrap">
                     {device.passcode}
                   </td>
                   {hasDeviceStatus && (
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {device.status ? (
                         <StatusBadge status={device.status} />
                       ) : (
@@ -1033,7 +1045,7 @@ function DevicesSection({
                       )}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <Button
                       variant="outline"
                       size="sm"
@@ -1045,7 +1057,7 @@ function DevicesSection({
                       จัดการสิทธิ์ ({device.employeeIds?.length || 0})
                     </Button>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <div className="flex justify-end gap-2">
                       <Tooltip text="Sync ข้อมูล">
                         <button
@@ -1126,10 +1138,10 @@ DevicesSection.propTypes = {
 };
 
 // ========================================================================
-// ========================= ส่วนหลักของหน้าจัดการองค์กร =========================
+// ========================= ส่วนหลักของหน้าจัดการบริษัท =========================
 // ========================================================================
 
-// ฟังก์ชันหลักของหน้าจัดการองค์กร
+// ฟังก์ชันหลักของหน้าจัดการบริษัท
 export function CompanyPage() {
   const logic = useCompanyLogic();
   const {
@@ -1209,18 +1221,18 @@ export function CompanyPage() {
           <CompanyIcon className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-text-main font-display">
-            จัดการข้อมูลองค์กร
+          <h2 className="text-xl md:text-2xl font-bold text-text-main font-display">
+            จัดการข้อมูลบริษัท
           </h2>
-          <p className="text-text-sub text-sm">
+          <p className="text-text-sub text-xs md:text-sm">
             ดูและแก้ไขข้อมูลบริษัทและโครงสร้างแผนก
           </p>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="border-b border-gray-200 px-6">
-          <div className="flex gap-4">
+        <div className="border-b border-gray-200 px-4 md:px-6">
+          <div className="flex gap-4 overflow-x-auto no-scrollbar">
             <TabButton
               active={activeTab === "info"}
               onClick={() => setActiveTab("info")}
@@ -1242,15 +1254,19 @@ export function CompanyPage() {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {activeTab === "info" && (
             <div>
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h3 className="text-lg font-semibold text-text-main font-display">
                   รายละเอียดบริษัท
                 </h3>
                 {!isEditing && (
-                  <Button variant="outline" onClick={handleEditClick}>
+                  <Button
+                    variant="outline"
+                    onClick={handleEditClick}
+                    className="w-full sm:w-auto"
+                  >
                     แก้ไขข้อมูล
                   </Button>
                 )}

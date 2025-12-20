@@ -197,7 +197,10 @@ export function EmployeePage() {
     if (isLoading && localEmployees.length === 0) {
       return [
         <tr key="loading">
-          <td colSpan={colSpan} className="px-6 py-8 text-center text-text-sub">
+          <td
+            colSpan={colSpan}
+            className="px-4 md:px-6 py-8 text-center text-text-sub"
+          >
             Loading...
           </td>
         </tr>,
@@ -208,7 +211,7 @@ export function EmployeePage() {
         <tr key="empty">
           <td
             colSpan={colSpan}
-            className="px-6 py-8 text-center text-text-muted"
+            className="px-4 md:px-6 py-8 text-center text-text-muted"
           >
             ไม่พบข้อมูลพนักงาน
           </td>
@@ -217,24 +220,24 @@ export function EmployeePage() {
     }
     return filteredEmployees.map((emp, index) => (
       <tr key={emp.id || index} className="hover:bg-gray-50">
-        <td className="px-6 py-4 font-medium text-text-main">
+        <td className="px-4 md:px-6 py-4 font-medium text-text-main whitespace-nowrap">
           {emp.name}
           <div className="text-xs text-text-sub font-normal mt-0.5">
             {emp.lineUserId ? `Line: ${emp.lineUserId}` : "-"}
           </div>
         </td>
-        <td className="px-6 py-4 text-text-sub font-mono text-sm">
+        <td className="px-4 md:px-6 py-4 text-text-sub font-mono text-sm whitespace-nowrap">
           {emp.ID_or_Passport_Number}
         </td>
         {companyInfo?.hasDepartment === 1 && (
-          <td className="px-6 py-4">
+          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
             <StatusBadge
               status={departmentLookup[emp.departmentId] || "ไม่ระบุ"}
               type="neutral"
             />
           </td>
         )}
-        <td className="px-6 py-4">
+        <td className="px-4 md:px-6 py-4 whitespace-nowrap">
           {emp.resign_date ? (
             <StatusBadge
               status={`ลาออก (${formatDate(emp.resign_date)})`}
@@ -244,7 +247,7 @@ export function EmployeePage() {
             <StatusBadge status="ปกติ" type="success" />
           )}
         </td>
-        <td className="px-6 py-4 text-right">
+        <td className="px-4 md:px-6 py-4 text-right whitespace-nowrap">
           <div className="flex justify-end gap-2">
             <button
               onClick={() => handleEditClick(emp)}
@@ -289,25 +292,25 @@ export function EmployeePage() {
           <UsersIcon className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-text-main font-display">
+          <h2 className="text-xl md:text-2xl font-bold text-text-main font-display">
             จัดการบุคลากร
           </h2>
-          <p className="text-text-sub text-sm">
+          <p className="text-text-sub text-xs md:text-sm">
             ดูและแก้ไขข้อมูลพนักงาน รวมถึงจัดการสถานะการทำงาน
           </p>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <div className="w-full max-w-md">
+        <div className="p-4 md:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="w-full sm:max-w-md">
             <Input
               placeholder="ค้นหาชื่อ แผนก หรือบัตรประจำตัว..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="text-sm text-text-sub">
+          <div className="text-sm text-text-sub w-full sm:w-auto text-right sm:text-left">
             ทั้งหมด {filteredEmployees.length} คน
           </div>
         </div>
@@ -316,13 +319,19 @@ export function EmployeePage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-text-sub font-semibold">
-                <th className="px-6 py-4">ชื่อ-นามสกุล</th>
-                <th className="px-6 py-4">รหัสบัตรประชาชน/พาสปอร์ต</th>
+                <th className="px-4 md:px-6 py-4 whitespace-nowrap">
+                  ชื่อ-นามสกุล
+                </th>
+                <th className="px-4 md:px-6 py-4 whitespace-nowrap">
+                  รหัสบัตรประชาชน/พาสปอร์ต
+                </th>
                 {companyInfo?.hasDepartment === 1 && (
-                  <th className="px-6 py-4">แผนก</th>
+                  <th className="px-4 md:px-6 py-4 whitespace-nowrap">แผนก</th>
                 )}
-                <th className="px-6 py-4">สถานะ</th>
-                <th className="px-6 py-4 text-right">จัดการ</th>
+                <th className="px-4 md:px-6 py-4 whitespace-nowrap">สถานะ</th>
+                <th className="px-4 md:px-6 py-4 text-right whitespace-nowrap">
+                  จัดการ
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">{employeeRows}</tbody>
