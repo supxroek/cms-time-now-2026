@@ -131,9 +131,10 @@ export function MainLayout() {
     <div className="min-h-screen bg-background flex overflow-x-hidden">
       {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <div
+        <button
           className="fixed inset-0 bg-black/50 z-40 xl:hidden"
           onClick={() => setIsSidebarOpen(false)}
+          aria-label="Close sidebar"
         />
       )}
 
