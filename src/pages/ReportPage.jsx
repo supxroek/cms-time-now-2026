@@ -43,14 +43,14 @@ function LineChart({
       <polyline fill="none" stroke={stroke} strokeWidth="2" points={points} />
       {data.map((d, i) => {
         const [x, y] = pointsArray[i];
-        return <circle key={d.label} cx={x} cy={y} r={3} fill={stroke} />;
+        return <circle key={d.label || i} cx={x} cy={y} r={3} fill={stroke} />;
       })}
       {/* labels */}
       {data.map((d, i) => {
         const x = padding + (i / (data.length - 1)) * w;
         return (
           <text
-            key={d.label}
+            key={d.label || i}
             x={x}
             y={height - 4}
             fontSize="10"
@@ -92,7 +92,7 @@ function PieChart({ data = [], width = 200, height = 200, colors }) {
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
-      {slices.map((s) => {
+      {slices.map((s, i) => {
         const x1 = cx + r * Math.cos(s.start);
         const y1 = cy + r * Math.sin(s.start);
         const x2 = cx + r * Math.cos(s.end);
@@ -101,7 +101,7 @@ function PieChart({ data = [], width = 200, height = 200, colors }) {
         const path = `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
         return (
           <path
-            key={s.department}
+            key={s.department || i}
             d={path}
             fill={
               (colors || defaultColors)[
@@ -114,7 +114,10 @@ function PieChart({ data = [], width = 200, height = 200, colors }) {
       })}
       {/* legend */}
       {data.map((d, i) => (
-        <g key={d.department} transform={`translate(${10}, ${10 + i * 18})`}>
+        <g
+          key={d.department || i}
+          transform={`translate(${10}, ${10 + i * 18})`}
+        >
           <rect
             width="12"
             height="12"

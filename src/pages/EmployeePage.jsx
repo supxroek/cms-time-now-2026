@@ -215,8 +215,8 @@ export function EmployeePage() {
         </tr>,
       ];
     }
-    return filteredEmployees.map((emp) => (
-      <tr key={emp.id} className="hover:bg-gray-50">
+    return filteredEmployees.map((emp, index) => (
+      <tr key={emp.id || index} className="hover:bg-gray-50">
         <td className="px-6 py-4 font-medium text-text-main">
           {emp.name}
           <div className="text-xs text-text-sub font-normal mt-0.5">

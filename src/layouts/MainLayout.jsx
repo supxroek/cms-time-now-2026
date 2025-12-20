@@ -14,8 +14,10 @@ import {
   ReportsIcon,
   SignOutIcon,
   ClockIcon,
+  BellIcon,
 } from "../components/atoms/Icons";
 
+import { NotificationDropdown } from "../components/molecules/NotificationDropdown";
 import PropTypes from "prop-types";
 
 const MenuIcon = ({ name }) => {
@@ -44,6 +46,59 @@ export function MainLayout() {
   const dispatch = useDispatch();
   const company = useSelector((state) => state.company.companyInfo);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isNotiOpen, setIsNotiOpen] = useState(false);
+
+  // Mock Notifications Data
+  const notifications = [
+    {
+      id: 1,
+      type: "info",
+      title: "คำขออนุมัติใหม่",
+      message: "นาย สมชาย ใจดี ขออนุมัติลาป่วย เนื่องจากไม่สบาย มีไข้สูง",
+      time: "เมื่อสักครู่",
+      read: false,
+    },
+    {
+      id: 2,
+      type: "warning",
+      title: "แจ้งเตือนการเข้างาน",
+      message: "นางสาว สมหญิง มาสายเกิน 15 นาที โปรดตรวจสอบ",
+      time: "10 นาทีที่แล้ว",
+      read: false,
+    },
+    {
+      id: 3,
+      type: "success",
+      title: "อนุมัติคำขอแล้ว",
+      message: "คำขอ OT ของ นาย ก. ได้รับการอนุมัติเรียบร้อยแล้ว",
+      time: "1 ชั่วโมงที่แล้ว",
+      read: true,
+    },
+    {
+      id: 4,
+      type: "error",
+      title: "ระบบขัดข้อง",
+      message: "ไม่สามารถเชื่อมต่อกับเครื่องสแกนนิ้วที่ 2 ได้",
+      time: "2 ชั่วโมงที่แล้ว",
+      read: true,
+    },
+    {
+      id: 5,
+      type: "info",
+      title: "ประกาศบริษัท",
+      message: "ขอเชิญพนักงานทุกท่านเข้าร่วมประชุมประจำเดือน",
+      time: "เมื่อวาน",
+      read: true,
+    },
+    {
+      id: 6,
+      type: "info",
+      title: "เอกสารใหม่",
+      message: "มีเอกสารใหม่รอการตรวจสอบจากฝ่ายบุคคล",
+      time: "2 วันที่แล้ว",
+      read: true,
+    },
+  ];
 
   useEffect(() => {
     if (token && isTokenExpired(token)) {
@@ -65,41 +120,20 @@ export function MainLayout() {
     { name: "Reports", path: "/reports" },
   ];
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Mobile Header */}
-      <div className="xl:hidden bg-white border-b border-gray-200 p-4 flex items-center justify-between sticky top-0 z-30">
-        <div className="flex items-center gap-2">
-          <img className="w-6 h-6" src="/src/assets/clock.png" alt="Clock" />
-          <span className="text-xl font-bold text-primary">Time Now</span>
-        </div>
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="text-gray-500 hover:text-primary focus:outline-none"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      </div>
+  const activeItem = menuItems.find(
+    (item) =>
+      location.pathname === item.path ||
+      location.pathname.startsWith(item.path + "/")
+  );
+  const pageTitle = activeItem ? activeItem.name : "Dashboard";
 
-      {/* Overlay */}
+  return (
+    <div className="min-h-screen bg-background flex overflow-x-hidden">
+      {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <button
-          type="button"
-          className="fixed inset-0 bg-black/50 z-40 xl:hidden w-full h-full cursor-default"
+        <div
+          className="fixed inset-0 bg-black/50 z-40 xl:hidden"
           onClick={() => setIsSidebarOpen(false)}
-          aria-label="Close sidebar"
         />
       )}
 
@@ -176,12 +210,75 @@ export function MainLayout() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 xl:ml-64 p-4 md:p-8 transition-all duration-300">
-        <div className="w-full xl:max-w-7xl mx-auto animate-fade-in">
-          <Outlet />
-        </div>
-      </main>
+      {/* Main Content Wrapper */}
+      <div className="flex-1 xl:ml-64 flex flex-col min-h-screen transition-all duration-300 min-w-0">
+        {/* Top Bar */}
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sticky top-0 z-30">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="xl:hidden text-gray-500 hover:text-primary focus:outline-none"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+            <div className="xl:hidden flex items-center gap-2">
+              <img
+                className="w-8 h-8"
+                src="/src/assets/clock.png"
+                alt="Clock"
+              />
+              <span className="text-xl font-bold text-primary hidden sm:block">
+                Time Now
+              </span>
+            </div>
+            <h1 className="text-xl font-bold text-text-main hidden xl:block">
+              {pageTitle}
+            </h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <button
+                onClick={() => setIsNotiOpen(!isNotiOpen)}
+                className={`p-2 rounded-full relative transition-colors ${
+                  isNotiOpen
+                    ? "bg-primary/10 text-primary"
+                    : "text-text-sub hover:text-primary hover:bg-gray-50"
+                }`}
+              >
+                <BellIcon />
+                {notifications.some((n) => !n.read) && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white animate-pulse"></span>
+                )}
+              </button>
+              <NotificationDropdown
+                isOpen={isNotiOpen}
+                onClose={() => setIsNotiOpen(false)}
+                notifications={notifications}
+              />
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-4 md:p-8">
+          <div className="w-full xl:max-w-7xl mx-auto animate-fade-in">
+            <Outlet />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

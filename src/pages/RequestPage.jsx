@@ -148,8 +148,8 @@ export function RequestPage() {
       );
     }
 
-    return filteredRequests.map((req) => (
-      <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+    return filteredRequests.map((req, index) => (
+      <tr key={req.id || index} className="hover:bg-gray-50 transition-colors">
         <td className="px-6 py-4 font-medium text-text-main">
           {req.employee_name ||
             req.employee?.first_name + " " + req.employee?.last_name ||
@@ -225,8 +225,8 @@ export function RequestPage() {
       );
     }
 
-    return history.items.map((req) => (
-      <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+    return history.items.map((req, index) => (
+      <tr key={req.id || index} className="hover:bg-gray-50 transition-colors">
         <td className="px-6 py-4 font-medium text-text-main">
           {req.employee_name || "Unknown"}
         </td>

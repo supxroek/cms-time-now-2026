@@ -275,9 +275,9 @@ export function DashboardPage() {
                 ยังไม่มีกิจกรรมในวันนี้
               </div>
             ) : (
-              recentActivities.map((activity) => (
+              recentActivities.map((activity, index) => (
                 <div
-                  key={activity.id}
+                  key={activity.id || index}
                   className="flex items-center gap-4 p-2 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   <div
@@ -473,8 +473,8 @@ export function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {attendanceRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
+                {attendanceRecords.map((record, index) => (
+                  <tr key={record.id || index} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap md:sticky left-0 bg-white z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                       <div className="flex items-center gap-3">
                         <Avatar

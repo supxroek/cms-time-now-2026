@@ -878,8 +878,8 @@ function DepartmentsSection({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {departments?.filter(Boolean).length > 0 ? (
-              departments.filter(Boolean).map((dept) => (
-                <tr key={dept.id} className="hover:bg-gray-50">
+              departments.filter(Boolean).map((dept, index) => (
+                <tr key={dept.id || index} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-text-main">
                     {dept.departmentName}
                   </td>
@@ -1003,8 +1003,8 @@ function DevicesSection({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {Array.isArray(devices) && devices.some(Boolean) ? (
-              devices.filter(Boolean).map((device) => (
-                <tr key={device.id} className="hover:bg-gray-50">
+              devices.filter(Boolean).map((device, index) => (
+                <tr key={device.id || index} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-text-main">
                     {device.name}
                   </td>

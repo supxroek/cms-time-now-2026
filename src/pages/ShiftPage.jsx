@@ -445,9 +445,9 @@ export function ShiftPage() {
       return renderEmpty("empty", "ยังไม่มีข้อมูลกะงาน", "สร้างกะงานแรก", () =>
         handleOpenModal()
       );
-    return safeShifts.map((shift) => (
+    return safeShifts.map((shift, index) => (
       <ShiftCard
-        key={shift.id}
+        key={shift.id || index}
         shift={shift}
         onEdit={handleOpenModal}
         onDelete={handleDeleteClick}
@@ -465,9 +465,9 @@ export function ShiftPage() {
         "สร้างรายการ OT แรก",
         () => handleOpenOTModal()
       );
-    return overtimes.map((ot) => (
+    return overtimes.map((ot, index) => (
       <OTCard
-        key={ot.id}
+        key={ot.id || index}
         ot={ot}
         onEdit={handleOpenOTModal}
         onDelete={handleOTDeleteClick}
